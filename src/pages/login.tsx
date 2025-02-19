@@ -10,6 +10,7 @@ import SectionFullScreen from "../components/Section/FullScreen";
 import LayoutGuest from "../layouts/Guest";
 import { getPageTitle } from "../config";
 import { useAuthStore } from "../stores/authStore";
+import axios from "axios";
 
 const validationSchema = Yup.object().shape({
   login: Yup.string().required("Username or email is required"),
@@ -20,17 +21,17 @@ const LoginPage = () => {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
 
-  const handleSubmit = (values, { setSubmitting, setErrors }) => {
-    const authMessage = login(values);
+  const handleSubmit = async (values, { setSubmitting, setErrors }) => {
+    const message = await login({ email: values.login, password: values.password });
   
-    if (authMessage !== "Logged in successfully!") {
-      setErrors({ login: authMessage });
-      setSubmitting(false);
-      return;
+    if (message === "Logged in successfully!") {
+      router.push("/dashboard");
+    } else {
+      setErrors({ login: message });
     }
-  
-    router.push("/dashboard");
+    setSubmitting(false);
   };
+  
 
   return (
     <>
@@ -52,7 +53,7 @@ const LoginPage = () => {
                   <label className="block text-gray-700 font-semibold">Username or Email</label>
                   <Field
                     name="login"
-                    className="w-full px-4 py-2 border rounded-md focus:ring-2 border-gray-300"
+                    className="w-full px-4 py-2 border rounded-full focus:ring-2 border-gray-300"
                   />
                   <ErrorMessage name="login" component="div" className="text-red-500 text-sm mt-1" />
                 </div>
@@ -62,7 +63,7 @@ const LoginPage = () => {
                   <Field
                     name="password"
                     type="password"
-                    className="w-full px-4 py-2 border rounded-md focus:ring-2 border-gray-300"
+                    className="w-full px-4 py-2 border rounded-full focus:ring-2 border-gray-300"
                   />
                   <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
                 </div>
@@ -73,8 +74,8 @@ const LoginPage = () => {
                 </div>
 
                 <div className="mt-4">
-                  <Button type="submit" label="Login" color="info" className="w-full" />
-                  <Button href="/register" label="Register" color="info" outline className="w-full mt-2" />
+                  <Button type="submit" label="Login" color="info" className="w-full rounded-full " />
+                  <Button href="/register" label="Register" color="info" outline className="w-full mt-2 rounded-full " />
                 </div>
               </Form>
             )}
