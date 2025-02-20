@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import { useRouter } from "next/navigation";
 import { Formik, Form, Field, ErrorMessage } from "formik";
@@ -12,10 +13,7 @@ import { getPageTitle } from "../config";
 
 const RegisterPage = () => {
   const router = useRouter();
-  const { setNewUser, registerUser } = useAuthStore((state) => ({
-    setNewUser: state.setNewUser,
-    registerUser: state.registerUser,
-  }));
+  const registerUser = useAuthStore((state) => state.registerUser);
 
   const validationSchema = Yup.object().shape({
     first_name: Yup.string().required("First name is required"),
@@ -26,16 +24,8 @@ const RegisterPage = () => {
   });
 
   const handleSubmit = async (values, { setSubmitting, setErrors }) => {
-    setNewUser({
-      first_name: values.first_name,
-      last_name: values.last_name,
-      email: values.email,
-      phone: values.phone,
-      password: values.password,
-    });
-  
-    const message = await registerUser();
-  
+    const message = await registerUser(values);
+
     if (message === "Registration successful!") {
       router.push("/login");
     } else {
@@ -43,7 +33,6 @@ const RegisterPage = () => {
     }
     setSubmitting(false);
   };
-  
 
   return (
     <>
@@ -60,41 +49,39 @@ const RegisterPage = () => {
             validationSchema={validationSchema}
             onSubmit={handleSubmit}
           >
-            {() => (
-              <Form className="space-y-4">
-                <div>
-                  <label className="block text-gray-700 font-semibold">First Name</label>
-                  <Field name="first_name" className="w-full px-4 py-2 border rounded-full focus:ring-2 border-gray-300" />
-                  <ErrorMessage name="first_name" component="div" className="text-red-500 text-sm mt-1" />
-                </div>
-                
-                <div>
-                  <label className="block text-gray-700 font-semibold">Last Name</label>
-                  <Field name="last_name" className="w-full px-4 py-2 border rounded-full focus:ring-2 border-gray-300" />
-                  <ErrorMessage name="last_name" component="div" className="text-red-500 text-sm mt-1" />
-                </div>
-                
-                <div>
-                  <label className="block text-gray-700 font-semibold">Email</label>
-                  <Field name="email" type="email" className="w-full px-4 py-2 border rounded-full focus:ring-2 border-gray-300" />
-                  <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
-                </div>
-                
-                <div>
-                  <label className="block text-gray-700 font-semibold">Phone</label>
-                  <Field name="phone" className="w-full px-4 py-2 border rounded-full focus:ring-2 border-gray-300" />
-                  <ErrorMessage name="phone" component="div" className="text-red-500 text-sm mt-1" />
-                </div>
-                
-                <div>
-                  <label className="block text-gray-700 font-semibold">Password</label>
-                  <Field name="password" type="password" className="w-full px-4 py-2 border rounded-full focus:ring-2 border-gray-300" />
-                  <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
-                </div>
+            <Form className="space-y-4">
+              <div>
+                <label className="block text-gray-700 font-semibold">First Name</label>
+                <Field name="first_name" className="w-full px-4 py-2 border rounded-full border-gray-300" />
+                <ErrorMessage name="first_name" component="div" className="text-red-500 text-sm mt-1" />
+              </div>
 
-                <Button type="submit" label="Register" color="info" className="w-full rounded-full" />
-              </Form>
-            )}
+              <div>
+                <label className="block text-gray-700 font-semibold">Last Name</label>
+                <Field name="last_name" className="w-full px-4 py-2 border rounded-full border-gray-300" />
+                <ErrorMessage name="last_name" component="div" className="text-red-500 text-sm mt-1" />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 font-semibold">Email</label>
+                <Field name="email" type="email" className="w-full px-4 py-2 border rounded-full border-gray-300" />
+                <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 font-semibold">Phone</label>
+                <Field name="phone" className="w-full px-4 py-2 border rounded-full border-gray-300" />
+                <ErrorMessage name="phone" component="div" className="text-red-500 text-sm mt-1" />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 font-semibold">Password</label>
+                <Field name="password" type="password" className="w-full px-4 py-2 border rounded-full border-gray-300" />
+                <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
+              </div>
+
+              <Button type="submit" label="Register" color="info" className="w-full rounded-full" />
+            </Form>
           </Formik>
         </CardBox>
       </SectionFullScreen>
