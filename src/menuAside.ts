@@ -4,6 +4,7 @@ import {
   mdiGithub,
   mdiLock,
   mdiAlertCircle,
+  mdiAccountPlus,
   mdiSquareEditOutline,
   mdiTable,
   mdiViewList,
@@ -54,6 +55,11 @@ const menuAside: MenuAsideItem[] = [
     href: '/login',
     label: 'Login',
     icon: mdiLock,
+  },
+  {
+    href: "/register", // Добавляем ссылку на регистрацию
+    label: "Register",
+    icon: mdiAccountPlus,
   },
   {
     href: '/error',
