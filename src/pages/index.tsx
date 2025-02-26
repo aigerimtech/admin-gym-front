@@ -1,7 +1,7 @@
 import Head from 'next/head'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
-import React, { ReactElement } from 'react'
+import React, { ReactElement, useEffect } from 'react'
 import CardBox from '../components/CardBox'
 import LayoutGuest from '../layouts/Guest'
 import SectionMain from '../components/Section/Main'
@@ -9,15 +9,25 @@ import { gradientBgPurplePink } from '../colors'
 import { appTitle } from '../config'
 import { useAppDispatch } from '../stores/hooks'
 import { setDarkMode } from '../stores/darkModeSlice'
+import { useAuthStore } from '../stores/auth/authStore'
 
 const StyleSelectPage = () => {
   const dispatch = useAppDispatch()
+  const router = useRouter()
+  const currentUser = useAuthStore((state) => state.currentUser)
 
-  dispatch(setDarkMode(false))
+  useEffect(() => {
+    dispatch(setDarkMode(false))
+  }, [dispatch])
+
+  // Redirect to login if the user is not authenticated
+  useEffect(() => {
+    if (!currentUser) {
+      router.push('/login')
+    }
+  }, [currentUser, router])
 
   const styles = ['white', 'basic']
-
-  const router = useRouter()
 
   const handleStylePick = (e: React.MouseEvent, style: string) => {
     e.preventDefault()
