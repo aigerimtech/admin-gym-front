@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, devtools } from "zustand/middleware";
-import { registerUser, loginUser, logoutUser, fetchUsers } from "./authActions";
+import { registerAll, register, loginUser, logoutUser, fetchUsers, fetchCurrentUser } from "./authActions";
+import { useSubscriptionStore } from "../subscription/subscriptionStore"; // ✅ Adjust the path if necessary
 
 // Define the User interface
 export interface User {
@@ -9,9 +10,9 @@ export interface User {
   last_name: string;
   email: string;
   phone: string;
-  role: string;
-  access_level: string;
-  status: string;
+  role?: string; // Admin only
+  access_level?: string; // Admin only
+  status?: string; // Admin only
 }
 
 // Define the shape of our Auth store
@@ -23,11 +24,21 @@ export interface AuthState {
   token: string | null;
 
   // Actions
-  registerUser: (userData: Omit<User, "id" | "role" | "status" | "access_level"> & { password: string }) => Promise<string>;
+  registerAll: (userData: Omit<User, "id" | "role" | "status" | "access_level"> & { password: string }) => Promise<string>;
+  register: (userData: Omit<User, "id" | "role" | "status"> & { password: string; access_level: string }) => Promise<string>;
   loginUser: (credentials: { email: string; password: string }) => Promise<string>;
   logoutUser: () => void;
   fetchUsers: () => Promise<void>;
+  fetchCurrentUser: () => Promise<void>;
 }
+
+// Helper function to safely get token
+const getToken = () => {
+  if (typeof window !== "undefined") {
+    return localStorage.getItem("token") || null;
+  }
+  return null;
+};
 
 export const useAuthStore = create<AuthState>()(
   devtools(
@@ -37,16 +48,40 @@ export const useAuthStore = create<AuthState>()(
         users: [],
         currentUser: null,
         isAuthenticated: false,
-        token: null,
+        token: getToken(), // ✅ Uses a safe function to avoid SSR issues
 
         // Actions
-        registerUser: (userData) => registerUser(set, userData),
-        loginUser: (credentials) => loginUser(set, get, credentials),
-        logoutUser: () => logoutUser(set),
+        registerAll: (userData) => registerAll(set, userData), // Public registration
+        register: (userData) => register(set, userData), // Admin registration
+        loginUser: async (credentials) => {
+          const message = await loginUser(set, get, credentials);
+          return message;
+        },
+        logoutUser: () => {
+          set({ 
+            isAuthenticated: false, 
+            currentUser: null, 
+            token: null,
+            users: [],  // Reset users list
+          });
+        
+          localStorage.removeItem("token"); // ✅ Ensure token is removed
+          console.log("User logged out, resetting subscriptions...");
+        
+          setTimeout(() => {
+            useSubscriptionStore.getState().resetSubscription(); // ✅ Reset subscription after state update
+          }, 0);
+        },
         fetchUsers: () => fetchUsers(set, get),
+        fetchCurrentUser: async () => {
+          const user = await fetchCurrentUser(set);
+          if (user) {
+            set({ currentUser: user, isAuthenticated: true });
+          }
+        },
       }),
       {
-        name: "auth-storage", // name of item in storage
+        name: "auth-storage", // Persist auth state
       }
     )
   )
