@@ -4,27 +4,81 @@ import { AuthState } from "./authStore";
 type SetState = (partial: Partial<AuthState> | ((state: AuthState) => Partial<AuthState>)) => void;
 type GetState = () => AuthState;
 
-export const registerUser = async (
+export const fetchCurrentUser = async (set: SetState) => {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    console.error("No token found");
+    return null;
+  }
+
+  try {
+    const response = await apiClient.get("/users/profile", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    console.log("Fetched User Profile:", response.data);
+
+    set((state) => ({
+      currentUser: response.data,
+      users: [...state.users, response.data],
+    }));
+
+    return response.data;
+  } catch (error) {
+    console.error("Failed to fetch user profile:", error);
+    return null;
+  }
+};
+
+export const registerAll = async (
   set: SetState,
   userData: { first_name: string; last_name: string; email: string; phone: string; password: string }
 ): Promise<string> => {
   try {
-    const response = await apiClient.post("/auth/register/all", {
-      ...userData,
-      access_level: "client",
-    });
+    const response = await apiClient.post("/auth/register/all", userData);
 
-    if (response.data.id) {
-      // Update store with new user
-      set((state) => ({ users: [...state.users, response.data] }));
+    if (response.status === 201) {
+      await fetchCurrentUser(set);
       return "Registration successful!";
-    } else {
-      return "Registration failed!";
     }
+    return "Registration failed!";
   } catch (error: any) {
+    console.error("Registration error:", error?.response?.data);
+    if (error.response?.status === 409) {
+      return "User already registered!";
+    }
     return error?.response?.data?.message || "Error registering user!";
   }
 };
+
+export const register = async (
+  set: SetState,
+  userData: { first_name: string; last_name: string; email: string; phone: string; password: string; access_level: string }
+): Promise<string> => {
+  const token = localStorage.getItem("token");
+  if (!token) return "Unauthorized: Please log in first.";
+
+  try {
+    const response = await apiClient.post("/auth/register", userData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (response.status === 201) {
+      set((state) => ({ users: [...state.users, response.data] }));
+      return "Admin registration successful!";
+    }
+    return "Admin registration failed!";
+  } catch (error: any) {
+    console.error("Admin Registration error:", error?.response?.data);
+    return error?.response?.data?.message || "Error registering admin!";
+  }
+};
+
 
 export const loginUser = async (
   set: SetState,
@@ -35,12 +89,13 @@ export const loginUser = async (
     const response = await apiClient.post("/auth/login", credentials);
 
     if (response.data.access_token) {
+      localStorage.setItem("token", response.data.access_token);
       setAuthHeader(response.data.access_token);
 
-      const userResponse = await apiClient.get("/users");
+      // Получаем профиль пользователя
+      await fetchCurrentUser(set);
 
       set({
-        currentUser: userResponse.data,
         isAuthenticated: true,
         token: response.data.access_token,
       });
@@ -50,11 +105,14 @@ export const loginUser = async (
       return "Invalid credentials!";
     }
   } catch (error: any) {
+    console.error("Login error:", error?.response?.data);
     return error?.response?.data?.message || "Login failed!";
   }
 };
 
+
 export const logoutUser = (set: SetState) => {
+  localStorage.removeItem("token");
   setAuthHeader(null);
   set({
     currentUser: null,
@@ -63,12 +121,16 @@ export const logoutUser = (set: SetState) => {
   });
 };
 
+
 export const fetchUsers = async (set: SetState, get: GetState) => {
   try {
     const { token } = get();
     if (!token) return;
 
-    const response = await apiClient.get("/users");
+    const response = await apiClient.get("/users", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
     set({ users: response.data });
   } catch (error) {
     console.error("Error fetching users:", error);

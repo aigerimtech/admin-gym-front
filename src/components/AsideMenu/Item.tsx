@@ -6,6 +6,7 @@ import { getButtonColor } from '../../colors'
 import AsideMenuList from './List'
 import { MenuAsideItem } from '../../interfaces'
 import { useRouter } from 'next/router'
+import { useAuthStore } from '../../stores/auth/authStore'
 
 type Props = {
   item: MenuAsideItem
@@ -29,6 +30,14 @@ const AsideMenuItem = ({ item, isDropdownList = false }: Props) => {
       setIsLinkActive(linkPathName === activePathname)
     }
   }, [item.href, isReady, asPath])
+
+  const handleItemClick = () => {
+    if (item.label === 'Logout') {
+      useAuthStore.getState().logoutUser()
+    } else {
+      setIsDropdownActive(!isDropdownActive)
+    }
+  }
 
   const asideMenuItemInnerContents = (
     <>
@@ -68,7 +77,7 @@ const AsideMenuItem = ({ item, isDropdownList = false }: Props) => {
         </Link>
       )}
       {!item.href && (
-        <div className={componentClass} onClick={() => setIsDropdownActive(!isDropdownActive)}>
+        <div className={componentClass} onClick={handleItemClick}>
           {asideMenuItemInnerContents}
         </div>
       )}
