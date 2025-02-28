@@ -32,7 +32,6 @@ export interface AuthState {
   fetchCurrentUser: () => Promise<void>;
 }
 
-// Helper function to safely get token
 const getToken = () => {
   if (typeof window !== "undefined") {
     return localStorage.getItem("token") || null;
@@ -44,13 +43,11 @@ export const useAuthStore = create<AuthState>()(
   devtools(
     persist(
       (set, get) => ({
-        // Initial state
         users: [],
         currentUser: null,
         isAuthenticated: false,
-        token: getToken(), // ✅ Uses a safe function to avoid SSR issues
+        token: getToken(), 
 
-        // Actions
         registerAll: (userData) => registerAll(set, userData), // Public registration
         register: (userData) => register(set, userData), // Admin registration
         loginUser: async (credentials) => {
@@ -62,14 +59,14 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: false, 
             currentUser: null, 
             token: null,
-            users: [],  // Reset users list
+            users: [], 
           });
         
-          localStorage.removeItem("token"); // ✅ Ensure token is removed
+          localStorage.removeItem("token"); 
           console.log("User logged out, resetting subscriptions...");
         
           setTimeout(() => {
-            useSubscriptionStore.getState().resetSubscription(); // ✅ Reset subscription after state update
+            useSubscriptionStore.getState().resetSubscription(); 
           }, 0);
         },
         fetchUsers: () => fetchUsers(set, get),
@@ -81,7 +78,7 @@ export const useAuthStore = create<AuthState>()(
         },
       }),
       {
-        name: "auth-storage", // Persist auth state
+        name: "auth-storage", 
       }
     )
   )

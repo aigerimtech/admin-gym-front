@@ -4,7 +4,6 @@ import { AuthState } from "./authStore";
 type SetState = (partial: Partial<AuthState> | ((state: AuthState) => Partial<AuthState>)) => void;
 type GetState = () => AuthState;
 
-// ✅ Получение информации о текущем пользователе
 export const fetchCurrentUser = async (set: SetState) => {
   const token = localStorage.getItem("token");
 
@@ -80,7 +79,7 @@ export const register = async (
   }
 };
 
-// ✅ Вход в систему
+
 export const loginUser = async (
   set: SetState,
   get: GetState,
@@ -111,7 +110,7 @@ export const loginUser = async (
   }
 };
 
-// ✅ Выход из системы
+
 export const logoutUser = (set: SetState) => {
   localStorage.removeItem("token");
   setAuthHeader(null);
@@ -122,7 +121,7 @@ export const logoutUser = (set: SetState) => {
   });
 };
 
-// ✅ Получение всех пользователей
+
 export const fetchUsers = async (set: SetState, get: GetState) => {
   try {
     const { token } = get();

@@ -21,6 +21,7 @@ export interface Subscription {
 
 export interface SubscriptionState {
   subscription: Subscription | null;
+  setSubscription: (subscription: Subscription | null) => void;
   processSubscriptionPayment: (paymentData: PaymentData) => Promise<{ message: string; subscription: Subscription | null }>;
   resetSubscription: () => void; // ✅ Ensure this function exists
 }
@@ -41,6 +42,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
     persist(
       (set) => ({
         subscription: null,
+        setSubscription: (subscription) => set({ subscription }),
 
         processSubscriptionPayment: async (paymentData) => {
           try {
