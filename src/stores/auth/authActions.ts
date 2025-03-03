@@ -1,9 +1,11 @@
 import { apiClient, setAuthHeader } from "../api/apiCLient";
 import { AuthState } from "./authStore";
+import { useAdminStore } from "../admin/adminStore";
 
 type SetState = (partial: Partial<AuthState> | ((state: AuthState) => Partial<AuthState>)) => void;
 type GetState = () => AuthState;
 
+// Получение текущего пользователя
 export const fetchCurrentUser = async (set: SetState) => {
   const token = localStorage.getItem("token");
 
@@ -19,12 +21,10 @@ export const fetchCurrentUser = async (set: SetState) => {
       },
     });
 
-    console.log("Fetched User Profile:", response.data);
-
-    set((state) => ({
+    set({
       currentUser: response.data,
-      users: [...state.users, response.data],
-    }));
+      isAuthenticated: true,
+    });
 
     return response.data;
   } catch (error) {
@@ -33,6 +33,7 @@ export const fetchCurrentUser = async (set: SetState) => {
   }
 };
 
+// Регистрация пользователя (публичная)
 export const registerAll = async (
   set: SetState,
   userData: { first_name: string; last_name: string; email: string; phone: string; password: string }
@@ -54,6 +55,7 @@ export const registerAll = async (
   }
 };
 
+// Регистрация администратора (только с токеном)
 export const register = async (
   set: SetState,
   userData: { first_name: string; last_name: string; email: string; phone: string; password: string; access_level: string }
@@ -69,7 +71,7 @@ export const register = async (
     });
 
     if (response.status === 201) {
-      set((state) => ({ users: [...state.users, response.data] }));
+      useAdminStore.getState().fetchUsers();
       return "Admin registration successful!";
     }
     return "Admin registration failed!";
@@ -79,7 +81,7 @@ export const register = async (
   }
 };
 
-
+// Вход пользователя
 export const loginUser = async (
   set: SetState,
   get: GetState,
@@ -93,12 +95,16 @@ export const loginUser = async (
       setAuthHeader(response.data.access_token);
 
       // Получаем профиль пользователя
-      await fetchCurrentUser(set);
+      const user = await fetchCurrentUser(set);
 
       set({
         isAuthenticated: true,
         token: response.data.access_token,
       });
+
+      if (user?.role === "ADMIN") {
+        return "Admin Logged in successfully!";
+      }
 
       return "Logged in successfully!";
     } else {
@@ -110,7 +116,7 @@ export const loginUser = async (
   }
 };
 
-
+// Выход из системы
 export const logoutUser = (set: SetState) => {
   localStorage.removeItem("token");
   setAuthHeader(null);
@@ -119,20 +125,4 @@ export const logoutUser = (set: SetState) => {
     isAuthenticated: false,
     token: null,
   });
-};
-
-
-export const fetchUsers = async (set: SetState, get: GetState) => {
-  try {
-    const { token } = get();
-    if (!token) return;
-
-    const response = await apiClient.get("/users", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    set({ users: response.data });
-  } catch (error) {
-    console.error("Error fetching users:", error);
-  }
 };

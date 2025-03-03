@@ -23,7 +23,7 @@ export interface SubscriptionState {
   subscription: Subscription | null;
   setSubscription: (subscription: Subscription | null) => void;
   processSubscriptionPayment: (paymentData: PaymentData) => Promise<{ message: string; subscription: Subscription | null }>;
-  resetSubscription: () => void; // ✅ Ensure this function exists
+  resetSubscription: () => void; 
 }
 
 interface PaymentData {
@@ -72,7 +72,6 @@ export const useSubscriptionStore = create<SubscriptionState>()(
           }
         },
 
-        // ✅ Reset subscription when user logs out
         resetSubscription: () => set({ subscription: null }),
       }),
       {
