@@ -21,20 +21,36 @@ const validationSchema = Yup.object().shape({
 
 const RegisterPage = () => {
   const router = useRouter();
-  const registerAll = useAuthStore((state) => state.registerAll); // ✅ Correct function name
+  const registerAll = useAuthStore((state) => state.registerAll);
 
   const handleSubmit = async (
     values: { first_name: string; last_name: string; email: string; phone: string; password: string },
     { setSubmitting, setErrors }: any
   ) => {
-    const message = await registerAll(values); // ✅ Use registerAll for regular users
-    if (message === "Registration successful!") {
-      router.push("/login");
-    } else {
-      setErrors({ email: message });
+    setSubmitting(true);
+  
+    const userData = { 
+      ...values, 
+      role: "user" as "user",  
+      access_level: "client" as "client"  
+    };
+  
+    try {
+      const message = await registerAll(userData);
+      
+      if (message.toLowerCase().includes("successful")) {
+        router.push("/login");
+      } else {
+        setErrors({ email: message });
+      }
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      setErrors({ email: "Registration failed. Please try again." });
     }
+  
     setSubmitting(false);
   };
+  
 
   return (
     <>

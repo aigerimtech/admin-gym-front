@@ -2,7 +2,7 @@ import {
   mdiMonitor, 
   mdiTable,
   mdiViewList,
-  
+  mdiAccountGroup,
 } from '@mdi/js'
 import { MenuAsideItem } from './interfaces'
 
@@ -21,6 +21,11 @@ const menuAside: MenuAsideItem[] = [
     href: '/subscriptions',
     icon: mdiViewList,
     label: 'Subscriptions',
+  },
+  {
+    href: '/users', 
+    icon: mdiAccountGroup, 
+    label: 'Users', 
   },
 ]
 

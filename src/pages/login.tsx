@@ -22,8 +22,10 @@ const LoginPage = () => {
 
   const handleSubmit = async (values: { login: string; password: string }, { setSubmitting, setErrors }: any) => {
     const message = await loginUser({ email: values.login, password: values.password });
-    if (message === "Logged in successfully!") {
-      router.push("/dashboard");
+    if (message === "Admin Logged in successfully!") {
+      router.push("/admin/users"); // Страница для админа
+    } else if (message === "Logged in successfully!") {
+      router.push("/dashboard"); // Стандартная страница
     } else {
       setErrors({ login: message });
     }

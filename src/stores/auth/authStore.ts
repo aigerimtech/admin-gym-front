@@ -1,43 +1,36 @@
 import { create } from "zustand";
 import { persist, devtools } from "zustand/middleware";
-import { registerAll, register, loginUser, logoutUser, fetchUsers, fetchCurrentUser } from "./authActions";
-import { useSubscriptionStore } from "../subscription/subscriptionStore"; // ✅ Adjust the path if necessary
+import { registerAll, register, loginUser, logoutUser, fetchCurrentUser } from "./authActions";
+import { useSubscriptionStore } from "../subscription/subscriptionStore"; 
+import { useAdminStore } from "../admin/adminStore";
+import { getToken, setToken } from "../utils/token";
+import { setAuthHeader } from "../api/apiCLient";
 
-// Define the User interface
 export interface User {
   id: number;
   first_name: string;
   last_name: string;
   email: string;
   phone: string;
-  role?: string; // Admin only
-  access_level?: string; // Admin only
-  status?: string; // Admin only
+  role: "user" | "admin";
+  access_level: "client" | "admin";
+  status: "active" | "blocked";
 }
 
-// Define the shape of our Auth store
 export interface AuthState {
-  // State
   users: User[];
   currentUser: User | null;
   isAuthenticated: boolean;
   token: string | null;
+  isAdmin: boolean;
 
-  // Actions
-  registerAll: (userData: Omit<User, "id" | "role" | "status" | "access_level"> & { password: string }) => Promise<string>;
-  register: (userData: Omit<User, "id" | "role" | "status"> & { password: string; access_level: string }) => Promise<string>;
+  registerAll: (userData: Omit<User, "id" | "status"> & { password: string }) => Promise<string>;
+  register: (userData: Omit<User, "id"> & { password: string; access_level: string }) => Promise<string>;
   loginUser: (credentials: { email: string; password: string }) => Promise<string>;
   logoutUser: () => void;
   fetchUsers: () => Promise<void>;
   fetchCurrentUser: () => Promise<void>;
 }
-
-const getToken = () => {
-  if (typeof window !== "undefined") {
-    return localStorage.getItem("token") || null;
-  }
-  return null;
-};
 
 export const useAuthStore = create<AuthState>()(
   devtools(
@@ -46,39 +39,61 @@ export const useAuthStore = create<AuthState>()(
         users: [],
         currentUser: null,
         isAuthenticated: false,
-        token: getToken(), 
+        token: getToken(),
+        isAdmin: false,          
 
-        registerAll: (userData) => registerAll(set, userData), // Public registration
-        register: (userData) => register(set, userData), // Admin registration
+        registerAll: (userData) => registerAll(set, userData),
+        register: (userData) => register(set, userData),
+
         loginUser: async (credentials) => {
           const message = await loginUser(set, get, credentials);
+          const state = get();
+          if (state.token) {
+            setAuthHeader(state.token);
+          }
           return message;
         },
+
         logoutUser: () => {
-          set({ 
-            isAuthenticated: false, 
-            currentUser: null, 
+          set({
+            isAuthenticated: false,
+            currentUser: null,
             token: null,
-            users: [], 
+            users: [],
+            isAdmin: false,
           });
-        
-          localStorage.removeItem("token"); 
+
+          setToken(null);
+          setAuthHeader(null);
           console.log("User logged out, resetting subscriptions...");
-        
+
           setTimeout(() => {
-            useSubscriptionStore.getState().resetSubscription(); 
+            useSubscriptionStore.getState().resetSubscription();
           }, 0);
         },
-        fetchUsers: () => fetchUsers(set, get),
+
+        fetchUsers: async () => {
+          if (!get().isAdmin) {
+            console.warn("Unauthorized: Only admins can fetch users");
+            return;
+          }
+          await useAdminStore.getState().fetchUsers();
+        },
+
         fetchCurrentUser: async () => {
           const user = await fetchCurrentUser(set);
           if (user) {
-            set({ currentUser: user, isAuthenticated: true });
+            const isAdmin = user.role === "admin" || user.access_level === "admin"; // ✅ Учитываем и role, и access_level
+            set({ currentUser: user, isAuthenticated: true, isAdmin });
+
+            if (isAdmin) {
+              await useAdminStore.getState().fetchUsers();
+            }
           }
-        },
+        }        
       }),
       {
-        name: "auth-storage", 
+        name: "auth-storage",
       }
     )
   )
