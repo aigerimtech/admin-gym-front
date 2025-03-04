@@ -4,17 +4,17 @@ import { useAuthStore } from '../stores/auth/authStore'
 
 const HomePage = () => {
   const router = useRouter()
-  const currentUser = useAuthStore((state) => state.currentUser)
+  const token = useAuthStore((state) => state.token)
 
   useEffect(() => {
-    if (currentUser === undefined) return 
+    if (token === undefined) return
 
-    if (currentUser) {
+    if (token) {
       router.push('/dashboard') 
     } else {
       router.push('/login')
     }
-  }, [currentUser, router])
+  }, [token, router])
 
   return null 
 }

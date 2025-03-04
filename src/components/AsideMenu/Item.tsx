@@ -14,6 +14,7 @@ type Props = {
 }
 
 const AsideMenuItem = ({ item, isDropdownList = false }: Props) => {
+  const router = useRouter()
   const logout = useAuthStore(state => state.logoutUser)
   const [isLinkActive, setIsLinkActive] = useState(false)
   const [isDropdownActive, setIsDropdownActive] = useState(false)
@@ -35,6 +36,7 @@ const AsideMenuItem = ({ item, isDropdownList = false }: Props) => {
   const handleItemClick = () => {
     if (item.label === 'Logout') {
       logout()
+      router.push('/login')
     } else {
       setIsDropdownActive(!isDropdownActive)
     }

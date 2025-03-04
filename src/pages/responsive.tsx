@@ -70,8 +70,4 @@ const ResponsivePage = () => {
   )
 }
 
-ResponsivePage.getLayout = function getLayout(page: ReactElement) {
-  return <LayoutAuthenticated>{page}</LayoutAuthenticated>
-}
-
 export default ResponsivePage

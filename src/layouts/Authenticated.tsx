@@ -10,12 +10,15 @@ import AsideMenu from '../components/AsideMenu'
 import FooterBar from '../components/FooterBar'
 import { Formik } from 'formik'
 import { useRouter } from 'next/router'
+import {useAuthStore} from "../stores/auth/authStore";
 
 type Props = {
   children: ReactNode
 }
 
 export default function LayoutAuthenticated({ children }: Props) {
+  const token = useAuthStore((state) => state.token)
+
   const [isAsideMobileExpanded, setIsAsideMobileExpanded] = useState(false)
   const [isAsideLgActive, setIsAsideLgActive] = useState(false)
 
@@ -79,17 +82,7 @@ export default function LayoutAuthenticated({ children }: Props) {
           onAsideLgClose={() => setIsAsideLgActive(false)}
         />
         {children}
-        <FooterBar>
-          Get more with{` `}
-          <a
-            href="https://tailwind-react.justboil.me/dashboard"
-            target="_blank"
-            rel="noreferrer"
-            className="text-blue-600"
-          >
-            Premium version
-          </a>
-        </FooterBar>
+
       </div>
     </div>
   )

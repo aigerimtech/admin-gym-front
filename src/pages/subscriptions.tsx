@@ -180,8 +180,5 @@ const SubscriptionsPage = () => {
   );
 };
 
-SubscriptionsPage.getLayout = function getLayout(page: React.ReactElement) {
-  return <LayoutAuthenticated>{page}</LayoutAuthenticated>;
-};
 
 export default SubscriptionsPage;

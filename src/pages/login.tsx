@@ -66,8 +66,5 @@ const LoginPage = () => {
   );
 };
 
-LoginPage.getLayout = function getLayout(page: React.ReactElement) {
-  return <LayoutGuest>{page}</LayoutGuest>;
-};
 
 export default LoginPage;
