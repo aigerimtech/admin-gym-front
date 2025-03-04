@@ -550,8 +550,5 @@ const UiPage = () => {
   )
 }
 
-UiPage.getLayout = function getLayout(page: ReactElement) {
-  return <LayoutAuthenticated>{page}</LayoutAuthenticated>
-}
 
 export default UiPage

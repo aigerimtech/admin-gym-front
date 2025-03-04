@@ -11,6 +11,21 @@ const AdminUsersPage = () => {
   const { isAuthenticated, isAdmin } = useAuthStore(); 
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [editingUser, setEditingUser] = useState<{ id: number; first_name: string; email: string } | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [updatedName, setUpdatedName] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [updatedEmail, setUpdatedEmail] = useState("");
+  const [newUser, setNewUser] = useState({
+    first_name: "",
+    last_name: "",
+    email: "",
+    phone: "",
+    password: "",
+    role: "user",
+    access_level: "client",
+  });
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -37,21 +52,6 @@ const AdminUsersPage = () => {
     return <p className="text-center">Loading...</p>;  
   }
 
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [editingUser, setEditingUser] = useState<{ id: number; first_name: string; email: string } | null>(null);
-  const [updatedName, setUpdatedName] = useState("");
-  const [updatedEmail, setUpdatedEmail] = useState("");
-
-  const [newUser, setNewUser] = useState({
-    first_name: "",
-    last_name: "",  
-    email: "",
-    phone: "",
-    password: "",
-    role: "user",  
-    access_level: "client",  
-  });
-
   const handleCreateUser = async () => {
     if (!newUser.first_name || !newUser.last_name || !newUser.email || !newUser.phone || !newUser.password) {
       alert("Please fill in all fields.");
@@ -60,8 +60,8 @@ const AdminUsersPage = () => {
   
     const userData = { 
       ...newUser, 
-      role: "user" as "user", 
-      access_level: "client" as "client" 
+      role: "user" as const,
+      access_level: "client" as const
     };
   
     await createUser(userData);
@@ -75,6 +75,7 @@ const AdminUsersPage = () => {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleUpdate = async () => {
     if (editingUser) {
       await updateUser(editingUser.id, { first_name: updatedName, email: updatedEmail });

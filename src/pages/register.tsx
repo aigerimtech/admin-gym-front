@@ -7,7 +7,6 @@ import Head from "next/head";
 import Button from "../components/Button";
 import CardBox from "../components/CardBox";
 import SectionFullScreen from "../components/Section/FullScreen";
-import LayoutGuest from "../layouts/Guest";
 import { getPageTitle } from "../config";
 import { useAuthStore } from "../stores/auth/authStore";
 
@@ -31,8 +30,8 @@ const RegisterPage = () => {
   
     const userData = { 
       ...values, 
-      role: "user" as "user",  
-      access_level: "client" as "client"  
+      role: "user" as const,
+      access_level: "client" as const
     };
   
     try {
@@ -100,8 +99,5 @@ const RegisterPage = () => {
   );
 };
 
-RegisterPage.getLayout = function getLayout(page: React.ReactElement) {
-  return <LayoutGuest>{page}</LayoutGuest>;
-};
 
 export default RegisterPage;

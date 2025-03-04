@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, devtools } from "zustand/middleware";
-import { registerAll, register, loginUser, logoutUser, fetchCurrentUser } from "./authActions";
+import { registerAll, register, loginUser, fetchCurrentUser } from "./authActions";
 import { useSubscriptionStore } from "../subscription/subscriptionStore"; 
 import { useAdminStore } from "../admin/adminStore";
 import { getToken, setToken } from "../utils/token";

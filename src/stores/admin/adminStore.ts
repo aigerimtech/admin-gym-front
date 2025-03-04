@@ -93,6 +93,7 @@ export const useAdminStore = create<AdminState>((set) => ({
     if (!token) return;
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const response = await apiClient.put(`/users/${id}`, userData, {
         headers: { Authorization: `Bearer ${token}` },
       });

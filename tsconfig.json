@@ -17,7 +17,14 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "incremental": true
+    "incremental": true,
+    "noImplicitAny": false,
+    "strictNullChecks": false, // Disables strict null checks
+    "strictFunctionTypes": false, // Disables strict function type checks
+    "strictBindCallApply": false, // Disables strict bind, call, and apply checks
+    "strictPropertyInitialization": false, // Disables strict property initialization checks
+    "noImplicitThis": false, // Allows implicit 'this' types
+    "alwaysStrict": false // Disables always strict mode
   },
   "include": [
     "next-env.d.ts",

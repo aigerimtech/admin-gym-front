@@ -14,6 +14,8 @@ type Props = {
 }
 
 const AsideMenuItem = ({ item, isDropdownList = false }: Props) => {
+  const router = useRouter()
+  const logout = useAuthStore(state => state.logoutUser)
   const [isLinkActive, setIsLinkActive] = useState(false)
   const [isDropdownActive, setIsDropdownActive] = useState(false)
 
@@ -33,7 +35,8 @@ const AsideMenuItem = ({ item, isDropdownList = false }: Props) => {
 
   const handleItemClick = () => {
     if (item.label === 'Logout') {
-      useAuthStore.getState().logoutUser()
+      logout()
+      router.push('/login')
     } else {
       setIsDropdownActive(!isDropdownActive)
     }
@@ -70,7 +73,7 @@ const AsideMenuItem = ({ item, isDropdownList = false }: Props) => {
   ].join(' ')
 
   return (
-    <li>
+    <li className='cursor-pointer'>
       {item.href && (
         <Link href={item.href} target={item.target} className={componentClass}>
           {asideMenuItemInnerContents}
