@@ -9,7 +9,7 @@ import CardBox from "../components/CardBox";
 import SectionFullScreen from "../components/Section/FullScreen";
 import LayoutGuest from "../layouts/Guest";
 import { getPageTitle } from "../config";
-import { useAuthStore } from "../stores/auth/authStore";
+import {AuthState, useAuthStore} from "../stores/auth/authStore";
 
 const validationSchema = Yup.object().shape({
   login: Yup.string().required("Email is required"),
@@ -18,7 +18,7 @@ const validationSchema = Yup.object().shape({
 
 const LoginPage = () => {
   const router = useRouter();
-  const loginUser = useAuthStore((state) => state.loginUser);
+  const loginUser = useAuthStore((state: AuthState ) => state.loginUser);
 
   const handleSubmit = async (values: { login: string; password: string }, { setSubmitting, setErrors }: any) => {
     const message = await loginUser({ email: values.login, password: values.password });

@@ -31,8 +31,8 @@ const RegisterPage = () => {
   
     const userData = { 
       ...values, 
-      role: "user" as "user",  
-      access_level: "client" as "client"  
+      role: "user" as const,
+      access_level: "client" as const
     };
   
     try {
