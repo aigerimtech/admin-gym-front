@@ -6,7 +6,25 @@ import {
 } from '@mdi/js'
 import { MenuAsideItem } from './interfaces'
 
-const menuAside: MenuAsideItem[] = [
+export const menuAsideUser: MenuAsideItem[] = [
+  {
+    href: '/dashboard',
+    icon: mdiMonitor,
+    label: 'Dashboard',
+  },
+  {
+    href: '/tables',
+    label: 'Tables',
+    icon: mdiTable,
+  },
+  {
+    href: '/subscriptions',
+    icon: mdiViewList,
+    label: 'Subscriptions',
+  },
+]
+
+export const menuAsideAdmin: MenuAsideItem[] = [
   {
     href: '/dashboard',
     icon: mdiMonitor,
@@ -23,10 +41,9 @@ const menuAside: MenuAsideItem[] = [
     label: 'Subscriptions',
   },
   {
-    href: '/users', 
-    icon: mdiAccountGroup, 
-    label: 'Users', 
+    href: '/users',
+    icon: mdiAccountGroup,
+    label: 'Users',
   },
 ]
 
-export default menuAside
