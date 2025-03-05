@@ -7,12 +7,11 @@ import Icon from '../components/Icon'
 import NavBar from '../components/NavBar'
 import NavBarItemPlain from '../components/NavBar/Item/Plain'
 import AsideMenu from '../components/AsideMenu'
-import FooterBar from '../components/FooterBar'
 import { Formik } from 'formik'
 import { useRouter } from 'next/router'
 import {AuthState, useAuthStore} from "../stores/auth/authStore";
 import {MenuAsideItem} from "../interfaces";
-
+ 
 type Props = {
   children: ReactNode
 }

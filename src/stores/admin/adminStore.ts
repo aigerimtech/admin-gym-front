@@ -15,6 +15,7 @@ export interface User {
 
 interface AdminState {
   users: User[];
+  currentAdmin: User | null; 
   fetchUsers: () => Promise<void>;
   fetchUserById: (id: number) => Promise<User | null>;
   createUser: (userData: Omit<User, "id" | "status"> & { password: string }) => Promise<void>;
@@ -24,16 +25,25 @@ interface AdminState {
 
 export const useAdminStore = create<AdminState>((set) => ({
   users: [],
+  currentAdmin: null, 
 
   fetchUsers: async () => {
     const token = getToken();
-    if (!token) return;
+    if (!token) {
+      console.warn("No token found, cannot fetch users.");
+      return;
+    }
 
     try {
       const response = await apiClient.get("/users", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      set({ users: response.data });
+
+      const filteredUsers = response.data.filter((user: User) => user.role !== "admin");
+
+      console.log("Fetched users (without admins):", filteredUsers);
+
+      set({ users: filteredUsers });
     } catch (error) {
       console.error("Error fetching users:", error);
     }
@@ -41,12 +51,16 @@ export const useAdminStore = create<AdminState>((set) => ({
 
   fetchUserById: async (id) => {
     const token = getToken();
-    if (!token) return null;
+    if (!token) {
+      console.warn("No token found, cannot fetch user.");
+      return null;
+    }
 
     try {
       const response = await apiClient.get(`/users/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       return response.data;
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -56,7 +70,10 @@ export const useAdminStore = create<AdminState>((set) => ({
 
   createUser: async (userData) => {
     const token = getToken();
-    if (!token) return;
+    if (!token) {
+      console.warn("No token found, cannot create user.");
+      return;
+    }
 
     try {
       const response = await apiClient.post("/users", userData, {
@@ -73,7 +90,10 @@ export const useAdminStore = create<AdminState>((set) => ({
 
   deleteUser: async (id) => {
     const token = getToken();
-    if (!token) return;
+    if (!token) {
+      console.warn("No token found, cannot delete user.");
+      return;
+    }
 
     try {
       await apiClient.delete(`/users/${id}`, {
@@ -90,17 +110,19 @@ export const useAdminStore = create<AdminState>((set) => ({
 
   updateUser: async (id, userData) => {
     const token = getToken();
-    if (!token) return;
+    if (!token) {
+      console.warn("No token found, cannot update user.");
+      return;
+    }
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const response = await apiClient.put(`/users/${id}`, userData, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       set((state) => ({
         users: state.users.map((user) =>
-          user.id === id ? { ...user, ...userData } : user
+          user.id === id ? { ...user, ...response.data } : user
         ),
       }));
     } catch (error) {
