@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@mdi/js": "^7.0.96",
+    "@mdi/react": "^1.6.1",
     "@reduxjs/toolkit": "^1.9.5",
     "axios": "^1.7.9",
     "chart.js": "^4.4.0",

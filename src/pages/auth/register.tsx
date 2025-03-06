@@ -4,12 +4,13 @@ import { useRouter } from "next/navigation";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import Head from "next/head";
-import Button from "../components/Button";
-import CardBox from "../components/CardBox";
-import SectionFullScreen from "../components/Section/FullScreen";
-import { getPageTitle } from "../config";
-import { useAuthStore } from "../stores/auth/authStore";
+import Button from "../../components/Button";
+import CardBox from "../../components/CardBox";
+import SectionFullScreen from "../../components/Section/FullScreen";
+import { getPageTitle } from "../../config";
+import { useAuthStore } from "../../stores/auth/authStore";
 
+// Validation schema for form fields
 const validationSchema = Yup.object().shape({
   first_name: Yup.string().required("First name is required"),
   last_name: Yup.string().required("Last name is required"),
@@ -27,29 +28,31 @@ const RegisterPage = () => {
     { setSubmitting, setErrors }: any
   ) => {
     setSubmitting(true);
-  
+
     const userData = { 
       ...values, 
-      role: "user" as const,
-      access_level: "client" as const
+      role: "user" as const,  // Default user role
+      access_level: "client" as const  // Default access level
     };
-  
+
     try {
+      // Attempt registration using Zustand store action
       const message = await registerAll(userData);
       
+      // Success check and routing
       if (message.toLowerCase().includes("successful")) {
+        // Redirect to login page after successful registration
         router.push("/login");
       } else {
-        setErrors({ email: message });
+        setErrors({ email: message });  // Display error message if registration fails
       }
     } catch (error: any) {
       console.error("Registration error:", error);
-      setErrors({ email: "Registration failed. Please try again." });
+      setErrors({ email: "Registration failed. Please try again." });  // Handle error gracefully
     }
-  
+
     setSubmitting(false);
   };
-  
 
   return (
     <>
@@ -98,6 +101,5 @@ const RegisterPage = () => {
     </>
   );
 };
-
 
 export default RegisterPage;

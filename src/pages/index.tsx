@@ -1,22 +1,28 @@
-import { useRouter } from 'next/router'
-import { useEffect } from 'react'
-import { useAuthStore } from '../stores/auth/authStore'
+import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
+import { useAuthStore } from '../stores/auth/authStore';
 
 const HomePage = () => {
-  const router = useRouter()
-  const token = useAuthStore((state) => state.token)
+  const router = useRouter();
+  const token = useAuthStore((state) => state.token);
+  const [hydrated, setHydrated] = useState(false);
+
+  // Ensure Zustand hydration before executing redirects
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   useEffect(() => {
-    if (token === undefined) return
+    if (!hydrated) return; // Prevent running redirect logic until Zustand is ready
 
     if (token) {
-      router.push('/dashboard') 
+      router.push('/dashboard'); // Use replace() to prevent back navigation to /
     } else {
-      router.push('/login')
+      router.push('/auth/login');
     }
-  }, [token, router])
+  }, [token, hydrated, router]);
 
-  return null 
-}
+  return null; // No UI needed for redirection
+};
 
-export default HomePage
+export default HomePage;

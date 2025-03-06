@@ -23,7 +23,8 @@ export interface SubscriptionState {
   subscription: Subscription | null;
   setSubscription: (subscription: Subscription | null) => void;
   processSubscriptionPayment: (paymentData: PaymentData) => Promise<{ message: string; subscription: Subscription | null }>;
-  resetSubscription: () => void; 
+  resetSubscription: () => void;
+  extendSubscription: (subscriptionId: number, newEndDate: string, newVisitsLeft: number) => void;
 }
 
 interface PaymentData {
@@ -40,7 +41,7 @@ interface PaymentData {
 export const useSubscriptionStore = create<SubscriptionState>()(
   devtools(
     persist(
-      (set) => ({
+      (set, get) => ({
         subscription: null,
         setSubscription: (subscription) => set({ subscription }),
 
@@ -48,8 +49,6 @@ export const useSubscriptionStore = create<SubscriptionState>()(
           try {
             const { token } = useAuthStore.getState();
             if (!token) return { message: "Unauthorized. Please log in.", subscription: null };
-
-            console.log("Sending request with token:", token);
 
             const response = await apiClient.post("/subscription/pay", paymentData, {
               headers: {
@@ -72,7 +71,44 @@ export const useSubscriptionStore = create<SubscriptionState>()(
           }
         },
 
+        fetchSubscriptions: async () => {
+          try {
+            const { token } = useAuthStore.getState();
+            if (!token) return { message: "Unauthorized. Please log in.", subscription: null };
+
+            const response = await apiClient.get("/subscription", {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+
+            const subscriptionData: Subscription = response.data.subscription;
+            set({ subscription: subscriptionData });
+            return { message: "Subscription fetched successfully", subscription: subscriptionData };
+          } catch (error: any) {
+            if (error.response) {
+              const { status, data } = error.response;
+              if (status === 401) return { message: "Unauthorized. Please log in.", subscription: null };
+              if (status === 500) return { message: "Server error. Try again later.", subscription: null };
+            }
+            return { message: "An unknown error occurred.", subscription: null };
+          }
+        },
+
+
         resetSubscription: () => set({ subscription: null }),
+
+        extendSubscription: (subscriptionId, newEndDate, newVisitsLeft) => {
+          const subscription = get().subscription;
+          if (subscription && subscription.id === subscriptionId) {
+            const updatedSubscription = {
+              ...subscription,
+              end_date: newEndDate,
+              visits_left: newVisitsLeft,
+            };
+            set({ subscription: updatedSubscription });
+          }
+        },
       }),
       {
         name: "subscription-storage",

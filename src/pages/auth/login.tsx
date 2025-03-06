@@ -4,11 +4,11 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { useRouter } from "next/navigation";
 import Head from "next/head";
-import Button from "../components/Button";
-import CardBox from "../components/CardBox";
-import SectionFullScreen from "../components/Section/FullScreen";
-import { getPageTitle } from "../config";
-import {AuthState, useAuthStore} from "../stores/auth/authStore";
+import Button from "../../components/Button";
+import CardBox from "../../components/CardBox";
+import SectionFullScreen from "../../components/Section/FullScreen";
+import { getPageTitle } from "../../config";
+import {AuthState, useAuthStore} from "../../stores/auth/authStore";
 
 const validationSchema = Yup.object().shape({
   login: Yup.string().required("Email is required"),
@@ -22,7 +22,7 @@ const LoginPage = () => {
   const handleSubmit = async (values: { login: string; password: string }, { setSubmitting, setErrors }: any) => {
     const message = await loginUser({ email: values.login, password: values.password });
     if (message === "Admin Logged in successfully!") {
-      router.push("/admin/users"); // Страница для админа
+      router.push("/dashboard"); // Страница для админа
     } else if (message === "Logged in successfully!") {
       router.push("/dashboard"); // Стандартная страница
     } else {
@@ -54,7 +54,7 @@ const LoginPage = () => {
                 </div>
                 <div className="mt-4">
                   <Button type="submit" label="Login" color="info" className="w-full rounded-full" />
-                  <Button href="/register" label="Register" color="info" outline className="w-full mt-2 rounded-full" />
+                  <Button href="/auth/register" label="Register" color="info" outline className="w-full mt-2 rounded-full" />
                 </div>
               </Form>
             )}
