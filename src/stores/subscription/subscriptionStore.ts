@@ -21,7 +21,7 @@ export interface Subscription {
 }
 
 export interface SubscriptionState {
-  subscription: Subscription | null;
+  subscription: Subscription ;
   setSubscription: (subscription: Subscription | null) => void;
   fetchSubscriptions: () => Promise<void>;
   processSubscriptionPayment: (paymentData: PaymentData) => Promise<{ message: string; success: boolean }>;
@@ -51,7 +51,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
             const { token } = useAuthStore.getState();
             if (!token) return;
 
-            const response = await apiClient.get("http://localhost:3000/subscription/all", {
+            const response = await apiClient.get("/subscription/all", {
               headers: { Authorization: `Bearer ${token}` },
             });
 

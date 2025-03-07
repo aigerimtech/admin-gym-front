@@ -45,4 +45,9 @@ export const menuAsideAdmin: MenuAsideItem[] = [
     icon: mdiAccountGroup,
     label: 'Users',
   },
+  {
+    href: '/attendance',
+    icon: mdiAccountGroup, 
+    label: 'Attendance',
+  },
 ]
