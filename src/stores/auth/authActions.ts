@@ -81,7 +81,6 @@ export const register = async (
   }
 };
 
-// Вход пользователя
 export const loginUser = async (
   set: SetState,
   get: GetState,
@@ -94,7 +93,6 @@ export const loginUser = async (
       localStorage.setItem("token", response.data.access_token);
       setAuthHeader(response.data.access_token);
 
-      // Получаем профиль пользователя
       const user = await fetchCurrentUser(set);
 
       set({
@@ -116,7 +114,7 @@ export const loginUser = async (
   }
 };
 
-// Выход из системы
+
 export const logoutUser = (set: SetState) => {
   localStorage.removeItem("token");
   setAuthHeader(null);

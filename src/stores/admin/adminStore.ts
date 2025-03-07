@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { apiClient } from "../api/apiCLient";
 import { getToken } from "../utils/token";
+import { Subscription, useSubscriptionStore } from "../subscription/subscriptionStore";
 
 export interface User {
   id: number;
@@ -11,11 +12,12 @@ export interface User {
   role: "user" | "admin";
   access_level: "client" | "admin";
   status: "active" | "blocked";
+  subscription?: Subscription | null;
 }
 
 interface AdminState {
   users: User[];
-  currentAdmin: User | null; 
+  currentAdmin: User | null;
   fetchUsers: () => Promise<void>;
   fetchUserById: (id: number) => Promise<User | null>;
   createUser: (userData: Omit<User, "id" | "status"> & { password: string }) => Promise<void>;
@@ -25,7 +27,7 @@ interface AdminState {
 
 export const useAdminStore = create<AdminState>((set) => ({
   users: [],
-  currentAdmin: null, 
+  currentAdmin: null,
 
   fetchUsers: async () => {
     const token = getToken();
@@ -33,21 +35,35 @@ export const useAdminStore = create<AdminState>((set) => ({
       console.warn("No token found, cannot fetch users.");
       return;
     }
-
+  
     try {
-      const response = await apiClient.get("/users", {
+      console.log("Fetching users...");
+      const userResponse = await apiClient.get("/users", {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      const filteredUsers = response.data.filter((user: User) => user.role !== "admin");
-
-      console.log("Fetched users (without admins):", filteredUsers);
-
-      set({ users: filteredUsers });
+  
+      let users: User[] = userResponse.data.filter((user: User) => user.role !== "admin");
+  
+      // Fetch all subscriptions
+      console.log("Fetching subscriptions...");
+      await useSubscriptionStore.getState().fetchSubscriptions();
+      const subscriptions = useSubscriptionStore.getState().subscription;
+  
+      if (Array.isArray(subscriptions)) {
+        users = users.map((user) => {
+          const userSubscription = subscriptions.find((sub) => sub.user?.id === user.id);
+          return { ...user, subscription: userSubscription || null };
+        });
+      } else {
+        console.warn("Subscriptions is not an array:", subscriptions);
+      }
+  
+      console.log("Users with subscriptions:", users);
+      set({ users });
     } catch (error) {
-      console.error("Error fetching users:", error);
+      console.error("Error fetching users or subscriptions:", error);
     }
-  },
+  },    
 
   fetchUserById: async (id) => {
     const token = getToken();
@@ -61,7 +77,16 @@ export const useAdminStore = create<AdminState>((set) => ({
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      return response.data;
+      const user = response.data;
+
+      // Attach subscription to the user
+      await useSubscriptionStore.getState().fetchSubscriptions();
+      const subscriptions = useSubscriptionStore.getState().subscription;
+      const userSubscription = Array.isArray(subscriptions)
+        ? subscriptions.find((sub) => sub.user?.id === user.id)
+        : null;
+
+      return { ...user, subscription: userSubscription || null };
     } catch (error) {
       console.error("Error fetching user:", error);
       return null;
@@ -83,6 +108,9 @@ export const useAdminStore = create<AdminState>((set) => ({
       set((state) => ({
         users: [...state.users, response.data],
       }));
+
+      // Fetch updated subscriptions
+      await useSubscriptionStore.getState().fetchSubscriptions();
     } catch (error) {
       console.error("Error creating user:", error);
     }
@@ -103,6 +131,9 @@ export const useAdminStore = create<AdminState>((set) => ({
       set((state) => ({
         users: state.users.filter((user) => user.id !== id),
       }));
+
+      // Fetch updated subscriptions
+      await useSubscriptionStore.getState().fetchSubscriptions();
     } catch (error) {
       console.error("Error deleting user:", error);
     }
@@ -125,6 +156,9 @@ export const useAdminStore = create<AdminState>((set) => ({
           user.id === id ? { ...user, ...response.data } : user
         ),
       }));
+
+      // Fetch updated subscriptions
+      await useSubscriptionStore.getState().fetchSubscriptions();
     } catch (error) {
       console.error("Error updating user:", error);
     }

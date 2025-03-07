@@ -7,22 +7,21 @@ const HomePage = () => {
   const token = useAuthStore((state) => state.token);
   const [hydrated, setHydrated] = useState(false);
 
-  // Ensure Zustand hydration before executing redirects
   useEffect(() => {
     setHydrated(true);
   }, []);
 
   useEffect(() => {
-    if (!hydrated) return; // Prevent running redirect logic until Zustand is ready
+    if (!hydrated) return;
 
     if (token) {
-      router.push('/dashboard'); // Use replace() to prevent back navigation to /
+      router.push('/dashboard'); 
     } else {
       router.push('/auth/login');
     }
   }, [token, hydrated, router]);
 
-  return null; // No UI needed for redirection
+  return null; 
 };
 
 export default HomePage;

@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, devtools } from "zustand/middleware";
 import { apiClient } from "../api/apiCLient";
 import { useAuthStore } from "../auth/authStore";
+import { useAdminStore } from "../admin/adminStore";
 
 export interface Subscription {
   id: number | null;
@@ -22,9 +23,9 @@ export interface Subscription {
 export interface SubscriptionState {
   subscription: Subscription | null;
   setSubscription: (subscription: Subscription | null) => void;
-  processSubscriptionPayment: (paymentData: PaymentData) => Promise<{ message: string; subscription: Subscription | null }>;
+  fetchSubscriptions: () => Promise<void>;
+  processSubscriptionPayment: (paymentData: PaymentData) => Promise<{ message: string; success: boolean }>;
   resetSubscription: () => void;
-  extendSubscription: (subscriptionId: number, newEndDate: string, newVisitsLeft: number) => void;
 }
 
 interface PaymentData {
@@ -41,78 +42,64 @@ interface PaymentData {
 export const useSubscriptionStore = create<SubscriptionState>()(
   devtools(
     persist(
-      (set, get) => ({
+      (set) => ({
         subscription: null,
         setSubscription: (subscription) => set({ subscription }),
-
-        processSubscriptionPayment: async (paymentData) => {
-          try {
-            const { token } = useAuthStore.getState();
-            if (!token) return { message: "Unauthorized. Please log in.", subscription: null };
-
-            const response = await apiClient.post("/subscription/pay", paymentData, {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-            });
-
-            const subscriptionData: Subscription = response.data.subscription;
-            set({ subscription: subscriptionData });
-            return { message: response.data.message || "Payment successful and subscription updated", subscription: subscriptionData };
-          } catch (error: any) {
-            if (error.response) {
-              const { status, data } = error.response;
-              if (status === 400) return { message: data.message || "Invalid card details.", subscription: null };
-              if (status === 401) return { message: "Unauthorized. Please log in.", subscription: null };
-              if (status === 500) return { message: "Server error. Try again later.", subscription: null };
-            }
-            return { message: "An unknown error occurred.", subscription: null };
-          }
-        },
 
         fetchSubscriptions: async () => {
           try {
             const { token } = useAuthStore.getState();
-            if (!token) return { message: "Unauthorized. Please log in.", subscription: null };
+            if (!token) return;
 
-            const response = await apiClient.get("/subscription", {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
+            const response = await apiClient.get("http://localhost:3000/subscription/all", {
+              headers: { Authorization: `Bearer ${token}` },
             });
 
-            const subscriptionData: Subscription = response.data.subscription;
-            set({ subscription: subscriptionData });
-            return { message: "Subscription fetched successfully", subscription: subscriptionData };
-          } catch (error: any) {
-            if (error.response) {
-              const { status, data } = error.response;
-              if (status === 401) return { message: "Unauthorized. Please log in.", subscription: null };
-              if (status === 500) return { message: "Server error. Try again later.", subscription: null };
-            }
-            return { message: "An unknown error occurred.", subscription: null };
+            const subscriptionsData: Subscription[] = response.data.subscriptions || [];
+
+            // Attach subscriptions to users in useAdminStore
+            useAdminStore.setState((state) => ({
+              users: state.users.map((user) => {
+                const userSubscription = subscriptionsData.find((sub) => sub.user?.id === user.id);
+                return {
+                  ...user,
+                  subscription: userSubscription || null,
+                };
+              }),
+            }));
+
+            // Set the first subscription as default (or null if none exist)
+            set({ subscription: subscriptionsData.length > 0 ? subscriptionsData[0] : null });
+          } catch (error) {
+            console.error("Error fetching subscriptions:", error);
           }
         },
 
+        processSubscriptionPayment: async (paymentData) => {
+          try {
+            const { token } = useAuthStore.getState();
+            if (!token) throw new Error("User not authenticated");
+
+            const response = await apiClient.post("/subscription/pay", paymentData, {
+              headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+            });
+
+            const newSubscription: Subscription = response.data.subscription;
+            set({ subscription: newSubscription });
+
+            // Refresh subscriptions and users
+            await useSubscriptionStore.getState().fetchSubscriptions();
+            await useAdminStore.getState().fetchUsers();
+
+            return { message: response.data.message || "Payment successful and subscription updated", success: true };
+          } catch (error) {
+            return { message: "An error occurred during payment.", success: false };
+          }
+        },
 
         resetSubscription: () => set({ subscription: null }),
-
-        extendSubscription: (subscriptionId, newEndDate, newVisitsLeft) => {
-          const subscription = get().subscription;
-          if (subscription && subscription.id === subscriptionId) {
-            const updatedSubscription = {
-              ...subscription,
-              end_date: newEndDate,
-              visits_left: newVisitsLeft,
-            };
-            set({ subscription: updatedSubscription });
-          }
-        },
       }),
-      {
-        name: "subscription-storage",
-      }
+      { name: "subscription-storage" }
     )
   )
 );
