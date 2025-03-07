@@ -46,4 +46,3 @@ export const menuAsideAdmin: MenuAsideItem[] = [
     label: 'Users',
   },
 ]
-

@@ -4,8 +4,8 @@ import type { AppProps } from "next/app";
 import type { ReactElement, ReactNode } from "react";
 import type { NextPage } from "next";
 import Head from "next/head";
-import { store } from "../stores/store";
 import { Provider } from "react-redux";
+import { store } from "../stores/store";
 import "../css/main.css";
 import LayoutAuthenticated from "../layouts/Authenticated";
 import { useAuthStore } from "../stores/auth/authStore";
@@ -24,25 +24,26 @@ function MyApp({ Component, pageProps }: AppPropsWithLayout) {
   const token = useAuthStore((state) => state.token);
   const [hydrated, setHydrated] = useState(false);
 
-  // Ensure the app is hydrated before rendering
+  const authRoutes = ["/auth/login", "/auth/register"];
+  const isAuthPage = authRoutes.includes(router.pathname);
+
   useEffect(() => {
     setHydrated(true);
   }, []);
 
   useEffect(() => {
-    if (hydrated && !token) {
-      router.push("/auth/login");
+    if (hydrated && !token && !isAuthPage) {
+      router.replace("/auth/login");
     }
-  }, [hydrated, token]);
+  }, [hydrated, token, isAuthPage]);
 
-  if (!hydrated) return null; // Prevents hydration mismatches
+  if (!hydrated) return null;
 
   return (
     <Provider store={store}>
       <>
         <Script src="https://www.googletagmanager.com/gtag/js?id=UA-130795909-1" strategy="afterInteractive" />
-
-        {token ? (
+        {token && !isAuthPage ? (
           <LayoutAuthenticated>
             <Component {...pageProps} />
           </LayoutAuthenticated>
