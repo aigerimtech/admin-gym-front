@@ -131,13 +131,15 @@ const UsersPage = () => {
                       {user.subscription?.type ?? "No Subscription"}
                     </td>
                     <td className="border p-2">
-                      {user.subscription?.start_date ?? "N/A"}
+                    {user.subscription ? user.subscription.start_date : "No Subscription"}
                     </td>
                     <td className="border p-2">
-                      {user.subscription?.end_date ?? "N/A"}
+                    {user.subscription ? user.subscription.end_date : "No Subscription"}
                     </td>
                     <td className="border p-2">
-                      {user.subscription?.status ?? "N/A"}
+                    <span className={user.subscription?.status === "active" ? "text-green-500" : "text-red-500"}>
+                      {user.subscription ? user.subscription.status : "N/A"}
+                    </span>
                     </td>
                     <td className="border p-2 flex gap-2">
                       <button

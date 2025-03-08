@@ -23,6 +23,7 @@ interface AdminState {
   createUser: (userData: Omit<User, "id" | "status"> & { password: string }) => Promise<void>;
   deleteUser: (id: number) => Promise<void>;
   updateUser: (id: number, userData: Partial<User>) => Promise<void>;
+  updateUserSubscription: (userId: number, subscription: Subscription | null) => void;
 }
 
 export const useAdminStore = create<AdminState>((set) => ({
@@ -35,35 +36,46 @@ export const useAdminStore = create<AdminState>((set) => ({
       console.warn("No token found, cannot fetch users.");
       return;
     }
-  
+
     try {
       console.log("Fetching users...");
       const userResponse = await apiClient.get("/users", {
         headers: { Authorization: `Bearer ${token}` },
       });
-  
+
       let users: User[] = userResponse.data.filter((user: User) => user.role !== "admin");
-  
-      // Fetch all subscriptions
+
       console.log("Fetching subscriptions...");
       await useSubscriptionStore.getState().fetchSubscriptions();
-      const subscriptions = useSubscriptionStore.getState().subscription;
-  
+      const subscriptions: Subscription[] = useSubscriptionStore.getState().subscription as unknown as Subscription[];
+
       if (Array.isArray(subscriptions)) {
         users = users.map((user) => {
           const userSubscription = subscriptions.find((sub) => sub.user?.id === user.id);
-          return { ...user, subscription: userSubscription || null };
+          return {
+            ...user,
+            subscription: userSubscription ?? null, // Ensure it's either a full object or null
+          };
         });
       } else {
         console.warn("Subscriptions is not an array:", subscriptions);
       }
-  
-      console.log("Users with subscriptions:", users);
-      set({ users });
+
+      // Ensure sequential numbering for display purposes
+      const usersWithDisplayIDs = users
+        .slice()
+        .sort((a, b) => a.id - b.id)
+        .map((user, index) => ({
+          ...user,
+          displayId: index + 1,
+        }));
+
+      console.log("Users with subscriptions:", usersWithDisplayIDs);
+      set({ users: usersWithDisplayIDs });
     } catch (error) {
       console.error("Error fetching users or subscriptions:", error);
     }
-  },    
+  },
 
   fetchUserById: async (id) => {
     const token = getToken();
@@ -79,14 +91,13 @@ export const useAdminStore = create<AdminState>((set) => ({
 
       const user = response.data;
 
-      // Attach subscription to the user
       await useSubscriptionStore.getState().fetchSubscriptions();
-      const subscriptions = useSubscriptionStore.getState().subscription;
+      const subscriptions = useSubscriptionStore.getState().subscription as unknown as Subscription[];
       const userSubscription = Array.isArray(subscriptions)
         ? subscriptions.find((sub) => sub.user?.id === user.id)
         : null;
 
-      return { ...user, subscription: userSubscription || null };
+      return { ...user, subscription: userSubscription ?? null };
     } catch (error) {
       console.error("Error fetching user:", error);
       return null;
@@ -109,7 +120,6 @@ export const useAdminStore = create<AdminState>((set) => ({
         users: [...state.users, response.data],
       }));
 
-      // Fetch updated subscriptions
       await useSubscriptionStore.getState().fetchSubscriptions();
     } catch (error) {
       console.error("Error creating user:", error);
@@ -132,7 +142,6 @@ export const useAdminStore = create<AdminState>((set) => ({
         users: state.users.filter((user) => user.id !== id),
       }));
 
-      // Fetch updated subscriptions
       await useSubscriptionStore.getState().fetchSubscriptions();
     } catch (error) {
       console.error("Error deleting user:", error);
@@ -157,10 +166,17 @@ export const useAdminStore = create<AdminState>((set) => ({
         ),
       }));
 
-      // Fetch updated subscriptions
       await useSubscriptionStore.getState().fetchSubscriptions();
     } catch (error) {
       console.error("Error updating user:", error);
     }
+  },
+
+  updateUserSubscription: (userId, subscription) => {
+    set((state) => ({
+      users: state.users.map((user) =>
+        user.id === userId ? { ...user, subscription } : user
+      ),
+    }));
   },
 }));
