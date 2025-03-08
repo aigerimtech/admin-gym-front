@@ -16,7 +16,7 @@ import EditUserModal from "../../components/CardBox/Component/EditUserModal";
 
 const UsersPage = () => {
   const { fetchUsers, users, deleteUser, updateUser } = useAdminStore();
-  const { fetchSubscriptions } = useSubscriptionStore(); 
+  const { fetchSubscriptions, subscriptions } = useSubscriptionStore();
   const fetchCurrentUser = useAuthStore((state) => state.fetchCurrentUser);
   const { isAuthenticated, isAdmin } = useAuthStore();
   const router = useRouter();
@@ -38,38 +38,16 @@ const UsersPage = () => {
     if (!loading) {
       if (!isAuthenticated) {
         router.push("/auth/login");
-      } else if (!isAdmin) {
-        router.push("/dashboard");
-      } else {
-        fetchUsers().then(() => {
-          console.log("Users after fetch:", useAdminStore.getState().users); // Log users
-        });
-  
-        fetchSubscriptions().then(() => {
-          console.log("Subscriptions after fetch:", useSubscriptionStore.getState().subscription); // Log subscriptions
-        });
-      }
+    }
+    } else if (!isAdmin) {
+      router.push("/dashboard");
     }
   }, [isAuthenticated, isAdmin, loading]);
-  
-
-  useEffect(() => {
-    console.log("Updated users:", users);
-  }, [users]);
 
   if (loading) {
     return <p className="text-center">Loading...</p>;
   }
 
-  const usersWithSequentialIDs = users.map((user, index) => ({
-    ...user,
-    seqId: index + 1,
-  }));
-
-  const usersPaginated = usersWithSequentialIDs.slice(
-    currentPage * perPage,
-    (currentPage + 1) * perPage
-  );
 
   const numPages = Math.ceil(users.length / perPage);
 
@@ -120,37 +98,37 @@ const UsersPage = () => {
               </tr>
             </thead>
             <tbody>
-              {usersPaginated.length > 0 ? (
-                usersPaginated.map((user) => (
-                  <tr key={user.id} className="border-b">
-                    <td className="border p-2">{user.seqId}</td>
-                    <td className="border p-2">{user.first_name} {user.last_name}</td>
-                    <td className="border p-2">{user.phone}</td>
-                    <td className="border p-2">{user.email}</td>
+              {subscriptions.length > 0 ? (
+                  subscriptions.map((subscription) => (
+                  <tr key={subscription.id} className="border-b">
+                    <td className="border p-2">{subscription.user.id}</td>
+                    <td className="border p-2">{subscription.user.first_name} {subscription.user.last_name}</td>
+                    <td className="border p-2">{subscription.user.phone}</td>
+                    <td className="border p-2">{subscription.user.email}</td>
                     <td className="border p-2">
-                      {user.subscription?.type ?? "No Subscription"}
+                      {subscription?.type ?? "No Subscription"}
                     </td>
                     <td className="border p-2">
-                    {user.subscription ? user.subscription.start_date : "No Subscription"}
+                    {subscription ? subscription.start_date : "No Subscription"}
                     </td>
                     <td className="border p-2">
-                    {user.subscription ? user.subscription.end_date : "No Subscription"}
+                    {subscription ? subscription.end_date : "No Subscription"}
                     </td>
                     <td className="border p-2">
-                    <span className={user.subscription?.status === "active" ? "text-green-500" : "text-red-500"}>
-                      {user.subscription ? user.subscription.status : "N/A"}
+                    <span className={subscription?.status === "active" ? "text-green-500" : "text-red-500"}>
+                      {subscription ? subscription.status : "N/A"}
                     </span>
                     </td>
                     <td className="border p-2 flex gap-2">
                       <button
                         className="text-blue-500 flex items-center gap-1"
-                        onClick={() => handleEdit(user)}
+                        onClick={() => handleEdit(subscription.user)}
                       >
                         <Icon path={mdiPencil} size={0.8} /> Edit
                       </button>
                       <button
                         className="text-red-500 flex items-center gap-1"
-                        onClick={() => deleteUser(user.id)}
+                        onClick={() => deleteUser(subscription.user.id)}
                       >
                         <Icon path={mdiTrashCan} size={0.8} /> Delete
                       </button>

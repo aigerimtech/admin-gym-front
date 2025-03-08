@@ -17,11 +17,13 @@ export interface Subscription {
     email: string | null;
     first_name: string | null;
     last_name: string | null;
+    phone: string | null
   } | null;
 }
 
 export interface SubscriptionState {
-  subscription: Subscription ;
+  subscription: Subscription;
+  subscriptions: Subscription[];
   setSubscription: (subscription: Subscription | null) => void;
   fetchSubscriptions: () => Promise<void>;
   processSubscriptionPayment: (paymentData: PaymentData) => Promise<{ message: string; success: boolean }>;
@@ -44,8 +46,8 @@ export const useSubscriptionStore = create<SubscriptionState>()(
     persist(
       (set) => ({
         subscription: null,
+        subscriptions: [],
         setSubscription: (subscription) => set({ subscription }),
-
         fetchSubscriptions: async () => {
           try {
             const { token } = useAuthStore.getState();
@@ -55,18 +57,10 @@ export const useSubscriptionStore = create<SubscriptionState>()(
               headers: { Authorization: `Bearer ${token}` },
             });
 
-            const subscriptionsData: Subscription[] = response.data.subscriptions || [];
+            const subscriptionsData: Subscription[] = response.data || [];
 
             // Attach subscriptions to users in useAdminStore
-            useAdminStore.setState((state) => ({
-              users: state.users.map((user) => {
-                const userSubscription = subscriptionsData.find((sub) => sub.user?.id === user.id);
-                return {
-                  ...user,
-                  subscription: userSubscription || null,
-                };
-              }),
-            }));
+            set({subscriptions: subscriptionsData})
 
             // Set the first subscription as default (or null if none exist)
             set({ subscription: subscriptionsData.length > 0 ? subscriptionsData[0] : null });
