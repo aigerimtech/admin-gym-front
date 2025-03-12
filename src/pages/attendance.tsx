@@ -1,137 +1,92 @@
 import { useState, useEffect } from "react";
-import { mdiPencil, mdiDelete } from '@mdi/js';
-import Icon from '@mdi/react';
-import Button from "../components/Button";
+import { mdiMagnify, mdiCheckCircle, mdiTrashCan } from "@mdi/js";
+import Icon from "@mdi/react";
 import CardBox from "../components/CardBox";
 import SectionMain from "../components/Section/Main";
 import SectionTitle from "../components/Section/Title";
 import { useAttendanceStore } from "../stores/attendance/attendanceStore";
-import { apiClient, setAuthHeader } from "../stores/api/apiCLient";
-import { getToken } from "../stores/utils/token";
 import { format } from "date-fns";
-import CardBoxModal from "../components/CardBox/Modal";
 
 const AttendancePage = () => {
-  const { attendance, fetchAttendanceByDate, markAttendance, updateAttendance, deleteAttendance } = useAttendanceStore();
+  const { attendance, fetchAttendanceByDate, markAttendance, deleteAttendance } = useAttendanceStore();
   const [selectedDate, setSelectedDate] = useState(format(new Date(), "yyyy-MM-dd"));
-  const [searchName, setSearchName] = useState("");
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [selectedRecord, setSelectedRecord] = useState(null);
-  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [newDate, setNewDate] = useState("");
+  const [totalVisitors, setTotalVisitors] = useState(0);
 
   useEffect(() => {
-    setAuthHeader(getToken());
     fetchAttendanceByDate(selectedDate);
   }, [selectedDate]);
 
-  const handleSearch = async () => {
-    try {
-      const response = await apiClient.get(`/users/search/${searchName}`);
-      if (response.data.length) {
-        setSelectedUser(response.data[0]);
-      }
-    } catch (error) {
-      console.error("Error searching user:", error);
-    }
-  };
-
-  const handleMarkAttendance = async () => {
-    if (!selectedUser) return;
-    await markAttendance(selectedUser.id, selectedDate);
-    fetchAttendanceByDate(selectedDate);
-  };
+  useEffect(() => {
+    setTotalVisitors(attendance.length);
+  }, [attendance]);
 
   return (
-    <SectionMain>
+    <SectionMain className="mt-2"> 
       <SectionTitle>Attendance Management</SectionTitle>
       <CardBox>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block font-semibold">Select Date</label>
-            <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="w-full border p-2 rounded shadow-sm" />
-          </div>
-          <div>
-            <label className="block font-semibold">Search User</label>
-            <div className="flex gap-2">
-              <input type="text" value={searchName} onChange={(e) => setSearchName(e.target.value)} className="w-full border p-2 rounded shadow-sm" />
-              <Button onClick={handleSearch} label="Search" />
-            </div>
-          </div>
+        <div className="flex items-center gap-4 mb-6">
+          <label className="font-medium">Select Date:</label>
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="border p-2 rounded w-full bg-gray-100 shadow-sm"
+          />
         </div>
-        {selectedUser && (
-          <div className="mt-4 p-4 bg-blue-50 border border-blue-300 rounded">
-            <p className="font-semibold">Selected User: {selectedUser.first_name} {selectedUser.last_name}</p>
-            <Button onClick={handleMarkAttendance} label="Mark Present" className="mt-2" />
-          </div>
-        )}
       </CardBox>
-      <CardBox>
-        <table className="w-full border-collapse border border-gray-300 shadow-md">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="border p-2">#</th>
-              <th className="border p-2">Name</th>
-              <th className="border p-2">Phone</th>
-              <th className="border p-2">Attendance</th>
-              <th className="border p-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {attendance.map((record, index) => (
-              <tr key={record.id} className="hover:bg-gray-50">
-                <td className="border p-2">{index + 1}</td>
-                <td className="border p-2">{record.user.first_name} {record.user.last_name}</td>
-                <td className="border p-2">{record.user.phone}</td>
-                <td className="border p-2 text-green-600 font-semibold">Present</td>
-                <td className="border p-2 flex gap-2 justify-center">
-                  <button onClick={() => { setSelectedRecord(record); setIsUpdateModalOpen(true); }} className="text-blue-500 hover:text-blue-700">
-                    <Icon path={mdiPencil} size={1} />
-                  </button>
-                  <button onClick={() => { setSelectedRecord(record); setIsDeleteModalOpen(true); }} className="text-red-500 hover:text-red-700">
-                    <Icon path={mdiDelete} size={1} />
-                  </button>
-                </td>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        
+        <CardBox>
+          <h2 className="text-lg font-semibold mb-4">Attendance List</h2>
+          <table className="w-full border-collapse table-auto bg-white shadow-md rounded-lg">
+            <thead className="bg-gray-200">
+              <tr>
+                <th className="border p-3 text-left text-sm text-gray-600">ID</th>
+                <th className="border p-3 text-left text-sm text-gray-600">Name</th>
+                <th className="border p-3 text-left text-sm text-gray-600">Phone</th>
+                <th className="border p-3 text-left text-sm text-gray-600">Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </CardBox>
-      {isUpdateModalOpen && (
-        <CardBoxModal
-          title="Update Attendance"
-          buttonColor="info"
-          buttonLabel="Confirm"
-          isActive={isUpdateModalOpen}
-          onConfirm={() => {
-            if (!selectedRecord || !newDate) return;
-            updateAttendance(selectedRecord.id, newDate);
-            setIsUpdateModalOpen(false);
-            fetchAttendanceByDate(selectedDate);
-          }}
-          onCancel={() => setIsUpdateModalOpen(false)}
-        >
-          <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} className="w-full border p-2 rounded shadow-sm" />
-        </CardBoxModal>
-      )}
-      {isDeleteModalOpen && (
-        <CardBoxModal
-          title="Delete Attendance"
-          buttonColor="danger"
-          buttonLabel="Confirm"
-          isActive={isDeleteModalOpen}
-          onConfirm={() => {
-            if (!selectedRecord) return;
-            deleteAttendance(selectedRecord.id);
-            setIsDeleteModalOpen(false);
-            fetchAttendanceByDate(selectedDate);
-          }}
-          onCancel={() => setIsDeleteModalOpen(false)}
-        >
-          <p>Are you sure you want to delete this record?</p>
-        </CardBoxModal>
-      )}
+            </thead>
+            <tbody>
+              {attendance.length > 0 ? (
+                attendance.map((record, index) => (
+                  <tr key={record.id} className="hover:bg-gray-50 transition-all">
+                    <td className="border p-3 text-center">{record.id}</td> {/* Displaying actual ID */}
+                    <td className="border p-3">{record.user.first_name} {record.user.last_name}</td>
+                    <td className="border p-3">{record.user.phone}</td>
+                    <td className="border p-3 flex gap-3 items-center justify-start">
+                      <button className="text-green-600 hover:text-green-800 flex items-center gap-1 text-sm font-medium">
+                        <Icon path={mdiCheckCircle} size={0.8} /> Present
+                      </button>
+                      <button
+                        className="text-red-600 hover:text-red-800 flex items-center gap-1 text-sm font-medium"
+                        onClick={() => deleteAttendance(record.id)}
+                      >
+                        <Icon path={mdiTrashCan} size={0.8} /> Remove
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={4} className="text-center p-4 text-gray-500">
+                    No attendance records for this date.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </CardBox>
+
+        <CardBox>
+          <h2 className="text-lg font-semibold mb-4">Summary</h2>
+          <div className="p-6 bg-gray-50 border border-gray-300 rounded-lg text-center">
+            <p className="text-xl font-semibold">Total Visitors: {totalVisitors}</p>
+            <p className="text-gray-600 mt-2">Keep track of daily attendance and manage records easily.</p>
+          </div>
+        </CardBox>
+      </div>
     </SectionMain>
   );
 };

@@ -1,18 +1,19 @@
-"use client";
 import { mdiEye, mdiTrashCan, mdiPencil, mdiPlus } from "@mdi/js";
 import Icon from "@mdi/react";
 import Head from "next/head";
 import React, { useEffect, useState } from "react";
 import CardBox from "../../components/CardBox";
-import NotificationBar from "../../components/NotificationBar";
 import SectionMain from "../../components/Section/Main";
 import SectionTitleLineWithButton from "../../components/Section/TitleLineWithButton";
+import NotificationBar from "../../components/NotificationBar";
 import { getPageTitle } from "../../config";
 import { useAuthStore } from "../../stores/auth/authStore";
 import { useAdminStore } from "../../stores/admin/adminStore";
-import { useSubscriptionStore } from "../../stores/subscription/subscriptionStore"; 
+import { useSubscriptionStore } from "../../stores/subscription/subscriptionStore";
 import { useRouter } from "next/navigation";
 import EditUserModal from "../../components/CardBox/Component/EditUserModal";
+import { useAttendanceStore } from "../../stores/attendance/attendanceStore";
+import MarkAttendanceModal from "../../components/CardBox/Component/MarkAttendanceModal";
 
 const UsersPage = () => {
   const { fetchUsers, users, deleteUser, updateUser } = useAdminStore();
@@ -25,6 +26,9 @@ const UsersPage = () => {
   const perPage = 5;
   const [editUser, setEditUser] = useState(null);
   const [isModalActive, setIsModalActive] = useState(false);
+  const [attendanceModalActive, setAttendanceModalActive] = useState(false);
+  const [selectedDate, setSelectedDate] = useState("");
+  const { fetchAttendanceByDate, attendance } = useAttendanceStore();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -38,7 +42,7 @@ const UsersPage = () => {
     if (!loading) {
       if (!isAuthenticated) {
         router.push("/auth/login");
-    }
+      }
     } else if (!isAdmin) {
       router.push("/dashboard");
     }
@@ -47,7 +51,6 @@ const UsersPage = () => {
   if (loading) {
     return <p className="text-center">Loading...</p>;
   }
-
 
   const numPages = Math.ceil(users.length / perPage);
 
@@ -61,8 +64,15 @@ const UsersPage = () => {
       await updateUser(editUser.id, editUser);
       setIsModalActive(false);
       await fetchUsers();
-      await fetchSubscriptions(); 
+      await fetchSubscriptions();
     }
+  };
+
+  const handleMarkAttendance = async () => {
+    if (selectedDate) {
+      await fetchAttendanceByDate(selectedDate);
+    }
+    setAttendanceModalActive(true);
   };
 
   return (
@@ -99,25 +109,17 @@ const UsersPage = () => {
             </thead>
             <tbody>
               {subscriptions.length > 0 ? (
-                  subscriptions.map((subscription) => (
+                subscriptions.map((subscription) => (
                   <tr key={subscription.id} className="border-b">
                     <td className="border p-2">{subscription.user.id}</td>
                     <td className="border p-2">{subscription.user.first_name} {subscription.user.last_name}</td>
                     <td className="border p-2">{subscription.user.phone}</td>
                     <td className="border p-2">{subscription.user.email}</td>
+                    <td className="border p-2">{subscription?.type ?? "No Subscription"}</td>
+                    <td className="border p-2">{subscription ? subscription.start_date : "No Subscription"}</td>
+                    <td className="border p-2">{subscription ? subscription.end_date : "No Subscription"}</td>
                     <td className="border p-2">
-                      {subscription?.type ?? "No Subscription"}
-                    </td>
-                    <td className="border p-2">
-                    {subscription ? subscription.start_date : "No Subscription"}
-                    </td>
-                    <td className="border p-2">
-                    {subscription ? subscription.end_date : "No Subscription"}
-                    </td>
-                    <td className="border p-2">
-                    <span className={subscription?.status === "active" ? "text-green-500" : "text-red-500"}>
-                      {subscription ? subscription.status : "N/A"}
-                    </span>
+                      <span className={subscription?.status === "active" ? "text-green-500" : "text-red-500"}>{subscription ? subscription.status : "N/A"}</span>
                     </td>
                     <td className="border p-2 flex gap-2">
                       <button
@@ -162,6 +164,26 @@ const UsersPage = () => {
             Page {currentPage + 1} of {numPages}
           </small>
         </div>
+
+        {/* Mark Attendance Button at Bottom-Right Corner */}
+        <div className="fixed bottom-4 right-4">
+          <button
+            onClick={() => {
+              setSelectedDate(new Date().toISOString().split("T")[0]);
+              handleMarkAttendance();
+            }}
+            className="bg-blue-500 text-white px-4 py-2 rounded flex items-center gap-1"
+          >
+            <Icon path={mdiPlus} size={0.8} /> Mark Attendance
+          </button>
+        </div>
+
+        <MarkAttendanceModal
+          isActive={attendanceModalActive}
+          onClose={() => setAttendanceModalActive(false)}
+          selectedDate={selectedDate}
+          setSelectedDate={setSelectedDate}
+        />
 
         <EditUserModal
           isActive={isModalActive}

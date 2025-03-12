@@ -59,10 +59,8 @@ export const useSubscriptionStore = create<SubscriptionState>()(
 
             const subscriptionsData: Subscription[] = response.data || [];
 
-            // Attach subscriptions to users in useAdminStore
             set({subscriptions: subscriptionsData})
 
-            // Set the first subscription as default (or null if none exist)
             set({ subscription: subscriptionsData.length > 0 ? subscriptionsData[0] : null });
           } catch (error) {
             console.error("Error fetching subscriptions:", error);

@@ -7,6 +7,7 @@ interface User {
   id: number;
   first_name: string;
   last_name: string;
+  email: string;
   phone: string;
 }
 
@@ -19,6 +20,7 @@ interface AttendanceRecord {
 
 interface AttendanceStore {
   attendance: AttendanceRecord[];
+  totalVisitors: number;
   fetchAttendanceByDate: (date: string | Date) => Promise<void>;
   markAttendance: (userId: number, visitDate: string | Date) => Promise<void>;
   updateAttendance: (attendanceId: number, visitDate: string | Date) => Promise<void>;
@@ -27,6 +29,7 @@ interface AttendanceStore {
 
 export const useAttendanceStore = create<AttendanceStore>((set, get) => ({
   attendance: [],
+  totalVisitors: 0,
 
   fetchAttendanceByDate: async (date) => {
     try {
@@ -36,7 +39,7 @@ export const useAttendanceStore = create<AttendanceStore>((set, get) => ({
       const formattedDate = format(new Date(date), "yyyy-MM-dd");
       const response = await apiClient.post("/attendance/by-date", { date: formattedDate });
 
-      set({ attendance: response.data });
+      set({ attendance: response.data, totalVisitors: response.data.length });
     } catch (error: any) {
       console.error("Error fetching attendance:", error.response?.data || error.message);
     }
@@ -50,7 +53,7 @@ export const useAttendanceStore = create<AttendanceStore>((set, get) => ({
       const formattedDate = format(new Date(visitDate), "yyyy-MM-dd'T00:00:00.000Z'");
       await apiClient.post("/attendance", { user: { id: userId }, visit_date: formattedDate });
 
-      get().fetchAttendanceByDate(visitDate);
+      await get().fetchAttendanceByDate(visitDate);
     } catch (error: any) {
       console.error("Error marking attendance:", error.response?.data || error.message);
     }
@@ -64,7 +67,7 @@ export const useAttendanceStore = create<AttendanceStore>((set, get) => ({
       const formattedDate = format(new Date(visitDate), "yyyy-MM-dd'T00:00:00.000Z'");
       await apiClient.put(`/attendance/${attendanceId}`, { visit_date: formattedDate });
 
-      get().fetchAttendanceByDate(visitDate);
+      await get().fetchAttendanceByDate(visitDate);
     } catch (error: any) {
       console.error("Error updating attendance:", error.response?.data || error.message);
     }
@@ -77,7 +80,7 @@ export const useAttendanceStore = create<AttendanceStore>((set, get) => ({
 
       await apiClient.delete(`/attendance/${attendanceId}`);
 
-      get().fetchAttendanceByDate(format(new Date(), "yyyy-MM-dd"));
+      await get().fetchAttendanceByDate(format(new Date(), "yyyy-MM-dd"));
     } catch (error: any) {
       console.error("Error deleting attendance:", error.response?.data || error.message);
     }
