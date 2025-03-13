@@ -1,10 +1,9 @@
 import { create } from "zustand";
 import { persist, devtools } from "zustand/middleware";
-import { registerAll, register, loginUser, fetchCurrentUser } from "./authActions";
-import { useSubscriptionStore } from "../subscription/subscriptionStore"; 
+import { apiClient, setAuthHeader } from "../api/apiCLient";
+import { useSubscriptionStore } from "../subscription/subscriptionStore";
 import { useAdminStore } from "../admin/adminStore";
 import { getToken, setToken } from "../utils/token";
-import { setAuthHeader } from "../api/apiCLient";
 
 export interface User {
   id: number;
@@ -23,7 +22,6 @@ export interface AuthState {
   isAuthenticated: boolean;
   token: string | null;
   isAdmin: boolean;
-
   registerAll: (userData: Omit<User, "id" | "status"> & { password: string }) => Promise<string>;
   register: (userData: Omit<User, "id"> & { password: string; access_level: string }) => Promise<string>;
   loginUser: (credentials: { email: string; password: string }) => Promise<string>;
@@ -38,79 +36,92 @@ export const useAuthStore = create<AuthState>()(
       (set, get) => ({
         users: [],
         currentUser: null,
-        isAuthenticated: false,
+        isAuthenticated: !!getToken(),
         token: getToken(),
-        isAdmin: false,          
+        isAdmin: false,
 
-        registerAll: (userData) => registerAll(set, userData),
-        register: (userData) => register(set, userData),
-
-        loginUser: async (credentials) => {
-          const message = await loginUser(set, get, credentials);
-          const state = get();
-          if (state.token) {
-            setAuthHeader(state.token);
+        registerAll: async (userData) => {
+          try {
+            const response = await apiClient.post("/auth/register/all", userData);
+            if (response.status === 201) {
+              await get().fetchCurrentUser();
+              return "Registration successful!";
+            }
+            return "Registration failed!";
+          } catch (error: any) {
+            console.error("Registration error:", error?.response?.data);
+            return error?.response?.data?.message || "Error registering user!";
           }
-          return message;
+        },
+
+        register: async (userData) => {
+          const token = getToken();
+          if (!token) return "Unauthorized: Please log in first.";
+          try {
+            const response = await apiClient.post("/auth/register", userData, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (response.status === 201) {
+              await useAdminStore.getState().fetchUsers();
+              return "Admin registration successful!";
+            }
+            return "Admin registration failed!";
+          } catch (error: any) {
+            console.error("Admin Registration error:", error?.response?.data);
+            return error?.response?.data?.message || "Error registering admin!";
+          }
+        },
+
+        loginUser: async ({ email, password }) => {
+          try {
+            const response = await apiClient.post("/auth/login", { email, password });
+            const { access_token } = response.data;
+            if (access_token) {
+              setToken(access_token);
+              setAuthHeader(access_token);
+              set({ token: access_token, isAuthenticated: true });
+              await get().fetchCurrentUser();
+              return "Logged in successfully!";
+            }
+            return "Invalid credentials!";
+          } catch (error: any) {
+            console.error("Login error:", error?.response?.data);
+            return error?.response?.data?.message || "Login failed!";
+          }
         },
 
         logoutUser: () => {
-          set({
-            isAuthenticated: false,
-            currentUser: null,
-            token: null,
-            users: [],
-            isAdmin: false,
-          });
-
           setToken(null);
           setAuthHeader(null);
-          console.log("User logged out, resetting subscriptions...");
+          set({ currentUser: null, isAuthenticated: false, token: null, users: [], isAdmin: false });
+          useSubscriptionStore.getState().resetSubscription();
+        },
 
-          setTimeout(() => {
-            useSubscriptionStore.getState().resetSubscription();
-          }, 0);
+        fetchCurrentUser: async () => {
+          try {
+            const token = getToken();
+            if (!token) {
+              console.error("No token found, user is unauthorized.");
+              return;
+            }
+            
+            const response = await apiClient.get("/users/profile", {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            const user = response.data;
+            const isAdmin = user.role === "admin" || user.access_level === "admin";
+            set({ currentUser: user, isAuthenticated: true, isAdmin });
+          } catch (error) {
+            console.error("Failed to fetch user profile:", error);
+          }
         },
 
         fetchUsers: async () => {
-          if (!get().isAdmin) {
-            console.warn("Unauthorized: Only admins can fetch users");
-            return;
-          }
+          if (!get().isAdmin) return console.warn("Unauthorized: Only admins can fetch users");
           await useAdminStore.getState().fetchUsers();
-        },
-
-        updateUser: (updatedUser: Partial<User>) => {
-          set((state) => {
-            if (!state.currentUser) return state;
-            
-            const updatedCurrentUser = { ...state.currentUser, ...updatedUser };
-            
-            return {
-              currentUser: updatedCurrentUser,
-              users: state.users.map((user) =>
-                user.id === updatedCurrentUser.id ? updatedCurrentUser : user
-              ),
-            };
-          });
-        },
-        
-
-        fetchCurrentUser: async () => {
-          const user = await fetchCurrentUser(set);
-          if (user) {
-            const isAdmin = user.role === "admin" || user.access_level === "admin"; 
-            set({ currentUser: user, isAuthenticated: true, isAdmin });
-
-            if (isAdmin) {
-              await useAdminStore.getState().fetchUsers();
-            }
-          }
-        }        
+        }
       }),
-      {
-        name: "auth-storage",
-      }
+      { name: "auth-storage" }
     )
   )
 );

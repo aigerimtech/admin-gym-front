@@ -38,30 +38,30 @@ export const useAdminStore = create<AdminState>((set) => ({
     }
 
     try {
-      console.log("Fetching users...");
       const userResponse = await apiClient.get("/users", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       let users: User[] = userResponse.data.filter((user: User) => user.role !== "admin");
 
-      console.log("Fetching subscriptions...");
       await useSubscriptionStore.getState().fetchSubscriptions();
-      const subscriptions: Subscription[] = useSubscriptionStore.getState().subscription as unknown as Subscription[];
+      const subscriptions: Subscription[] = useSubscriptionStore.getState().subscriptions as unknown as Subscription[];
 
       if (Array.isArray(subscriptions)) {
         users = users.map((user) => {
           const userSubscription = subscriptions.find((sub) => sub.user?.id === user.id);
           return {
             ...user,
-            subscription: userSubscription ?? null, // Ensure it's either a full object or null
+            subscription: userSubscription ?? null, 
           };
         });
-      } else {
-        console.warn("Subscriptions is not an array:", subscriptions);
       }
 
-      // Ensure sequential numbering for display purposes
+      // users = users.map((user) => ({
+      //   ...user,
+      //   subscription: subscriptions.find((sub) => sub.user?.id === user.id) || null,
+      // }));
+
       const usersWithDisplayIDs = users
         .slice()
         .sort((a, b) => a.id - b.id)
@@ -70,7 +70,7 @@ export const useAdminStore = create<AdminState>((set) => ({
           displayId: index + 1,
         }));
 
-      console.log("Users with subscriptions:", usersWithDisplayIDs);
+      console.log("Users:", usersWithDisplayIDs);
       set({ users: usersWithDisplayIDs });
     } catch (error) {
       console.error("Error fetching users or subscriptions:", error);
