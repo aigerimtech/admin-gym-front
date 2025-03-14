@@ -15,13 +15,17 @@ const HomePage = () => {
     if (!hydrated) return;
 
     if (token) {
-      router.push('/dashboard'); 
+      router.push('/dashboard');
     } else {
       router.push('/auth/login');
     }
   }, [token, hydrated, router]);
 
-  return null; 
+  if (!hydrated) {
+    return null;
+  }
+
+  return null;
 };
 
 export default HomePage;

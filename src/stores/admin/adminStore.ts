@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import { apiClient } from "../api/apiCLient";
 import { getToken } from "../utils/token";
-import { Subscription, useSubscriptionStore } from "../subscription/subscriptionStore";
+import { useSubscriptionStore } from "../subscription/subscriptionStore"; 
+import { Subscription } from "../subscription/subscriptionStore";
 
 export interface User {
   id: number;
@@ -20,10 +21,11 @@ interface AdminState {
   currentAdmin: User | null;
   fetchUsers: () => Promise<void>;
   fetchUserById: (id: number) => Promise<User | null>;
-  createUser: (userData: Omit<User, "id" | "status"> & { password: string }) => Promise<void>;
+  createUser: (userData: Omit<User, "id" | "status" | "access_level"> & { password: string }) => Promise<void>;
   deleteUser: (id: number) => Promise<void>;
   updateUser: (id: number, userData: Partial<User>) => Promise<void>;
   updateUserSubscription: (userId: number, subscription: Subscription | null) => void;
+  logout: () => void; 
 }
 
 export const useAdminStore = create<AdminState>((set) => ({
@@ -57,21 +59,12 @@ export const useAdminStore = create<AdminState>((set) => ({
         });
       }
 
-      // users = users.map((user) => ({
-      //   ...user,
-      //   subscription: subscriptions.find((sub) => sub.user?.id === user.id) || null,
-      // }));
+      users = users.map((user) => ({
+        ...user,
+        subscription: subscriptions.find((sub) => sub.user?.id === user.id) || null,
+      }));
 
-      const usersWithDisplayIDs = users
-        .slice()
-        .sort((a, b) => a.id - b.id)
-        .map((user, index) => ({
-          ...user,
-          displayId: index + 1,
-        }));
-
-      console.log("Users:", usersWithDisplayIDs);
-      set({ users: usersWithDisplayIDs });
+      set({ users });
     } catch (error) {
       console.error("Error fetching users or subscriptions:", error);
     }
@@ -104,27 +97,35 @@ export const useAdminStore = create<AdminState>((set) => ({
     }
   },
 
-  createUser: async (userData) => {
+  createUser: async (userData: {
+      first_name: string,
+      last_name: string, 
+      phone: string, 
+      email: string, 
+      password: string, 
+      role: "user" | "admin" 
+    }) => {
     const token = getToken();
     if (!token) {
       console.warn("No token found, cannot create user.");
       return;
     }
-
+  
     try {
       const response = await apiClient.post("/users", userData, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
+  
+      const newUser = response.data;
       set((state) => ({
-        users: [...state.users, response.data],
+        users: [...state.users, newUser], 
       }));
-
+  
       await useSubscriptionStore.getState().fetchSubscriptions();
     } catch (error) {
       console.error("Error creating user:", error);
     }
-  },
+  },  
 
   deleteUser: async (id) => {
     const token = getToken();
@@ -179,4 +180,9 @@ export const useAdminStore = create<AdminState>((set) => ({
       ),
     }));
   },
+
+  logout: () => {
+    useSubscriptionStore.getState().resetSubscription();
+    set({ currentAdmin: null });
+  }
 }));

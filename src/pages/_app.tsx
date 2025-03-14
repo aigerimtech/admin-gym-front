@@ -35,7 +35,7 @@ function MyApp({ Component, pageProps }: AppPropsWithLayout) {
     if (hydrated && !token && !isAuthPage) {
       router.replace("/auth/login");
     }
-  }, [hydrated, token, isAuthPage]);
+  }, [hydrated, token, isAuthPage, router]);
 
   if (!hydrated) return null;
 

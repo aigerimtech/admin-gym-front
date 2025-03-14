@@ -30,7 +30,7 @@ const MarkAttendanceModal: React.FC<MarkAttendanceModalProps> = ({
     setAuthHeader(getToken());
     fetchUsers();
     if (selectedDate) fetchAttendanceByDate(selectedDate);
-  }, [selectedDate]);
+  }, [selectedDate, fetchUsers, fetchAttendanceByDate]);
 
   useEffect(() => {
     if (searchName.trim()) {
@@ -57,11 +57,21 @@ const MarkAttendanceModal: React.FC<MarkAttendanceModalProps> = ({
     setSelectedUser(null);
   };
 
+  // Close modal when clicking outside of modal content
+  const handleBackdropClick = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    onClose();
+  };
+
   if (!isActive) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-      <div className="bg-white rounded-lg p-6 w-full max-w-5xl h-full overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center" onClick={handleBackdropClick}>
+      <div
+        className="bg-white rounded-lg p-6 w-full max-w-5xl h-full overflow-y-auto"
+        onClick={(event) => event.stopPropagation()} // Prevent closing when clicking inside
+      >
+        {/* Modal Header */}
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold">Mark Attendance for {selectedDate}</h2>
           <button onClick={onClose} className="text-red-500">
@@ -76,6 +86,7 @@ const MarkAttendanceModal: React.FC<MarkAttendanceModalProps> = ({
           </div>
         )}
 
+        {/* Date Selector */}
         <div className="flex items-center gap-4 mb-4">
           <label className="font-medium">Select Date:</label>
           <input
@@ -85,6 +96,8 @@ const MarkAttendanceModal: React.FC<MarkAttendanceModalProps> = ({
             className="border p-2 rounded"
           />
         </div>
+
+        {/* User Search Input */}
         <div className="flex items-center mb-4">
           <input
             type="text"
@@ -95,6 +108,8 @@ const MarkAttendanceModal: React.FC<MarkAttendanceModalProps> = ({
           />
           <Icon path={mdiMagnify} size={1} className="ml-2 text-gray-500" />
         </div>
+
+        {/* User List */}
         <div className="max-h-96 overflow-y-auto mb-4">
           {searchName.trim() && filteredUsers.length === 0 ? (
             <p>No users found.</p>
@@ -113,7 +128,7 @@ const MarkAttendanceModal: React.FC<MarkAttendanceModalProps> = ({
           )}
         </div>
 
-        {/* Mark Present Section */}
+        {/* Selected User */}
         {selectedUser && (
           <div className="flex justify-between items-center p-4 bg-green-100 rounded-lg">
             <span className="font-semibold">Selected User: {selectedUser.first_name} {selectedUser.last_name}</span>
