@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { mdiMagnify, mdiCheckCircle, mdiTrashCan } from "@mdi/js";
+import { mdiCheckCircle, mdiTrashCan } from "@mdi/js";
 import Icon from "@mdi/react";
 import CardBox from "../components/CardBox";
 import SectionMain from "../components/Section/Main";
@@ -8,13 +8,13 @@ import { useAttendanceStore } from "../stores/attendance/attendanceStore";
 import { format } from "date-fns";
 
 const AttendancePage = () => {
-  const { attendance, fetchAttendanceByDate, markAttendance, deleteAttendance } = useAttendanceStore();
+  const { attendance, fetchAttendanceByDate, deleteAttendance } = useAttendanceStore();
   const [selectedDate, setSelectedDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [totalVisitors, setTotalVisitors] = useState(0);
 
   useEffect(() => {
     fetchAttendanceByDate(selectedDate);
-  }, [selectedDate]);
+  }, [selectedDate,fetchAttendanceByDate]);
 
   useEffect(() => {
     setTotalVisitors(attendance.length);

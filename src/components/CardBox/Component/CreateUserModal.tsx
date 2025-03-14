@@ -1,6 +1,6 @@
-"use client";
 import React, { useState } from "react";
 import CardBoxModal from "../../CardBox/Modal";
+import { useAdminStore } from "../../../stores/admin/adminStore"; 
 
 interface CreateUserModalProps {
   isActive: boolean;
@@ -8,17 +8,25 @@ interface CreateUserModalProps {
 }
 
 const CreateUserModal: React.FC<CreateUserModalProps> = ({ isActive, onClose }) => {
+
   const [newUser, setNewUser] = useState({
     first_name: "",
     last_name: "",
     phone: "",
     email: "",
+    password: "",
+    role: "user" as "user" | "admin" , 
   });
 
+  const { createUser } = useAdminStore(); 
+
   const handleSave = async () => {
-    // Implement user creation logic here (e.g., call an API to create a user)
-    console.log("Creating user:", newUser);
-    onClose();
+    try {
+      await createUser(newUser); 
+      onClose(); 
+    } catch (error) {
+      console.error("Error creating user:", error);
+    }
   };
 
   return (
@@ -54,6 +62,13 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ isActive, onClose }) 
           placeholder="Email"
           value={newUser.email}
           onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+        />
+        <input
+          className="border p-2 w-full mb-2"
+          placeholder="Password"
+          type="password"
+          value={newUser.password}
+          onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
         />
       </div>
     </CardBoxModal>

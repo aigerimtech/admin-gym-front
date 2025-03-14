@@ -91,11 +91,19 @@ export const useAuthStore = create<AuthState>()(
         },
 
         logoutUser: () => {
-          setToken(null);
-          setAuthHeader(null);
-          set({ currentUser: null, isAuthenticated: false, token: null, users: [], isAdmin: false });
+          setToken(null); 
+          setAuthHeader(null); 
+          set({
+            currentUser: null,
+            isAuthenticated: false,
+            token: null,
+            users: [],
+            isAdmin: false,
+          });
+        
           useSubscriptionStore.getState().resetSubscription();
-        },
+          localStorage.removeItem("subscription-storage");
+        },        
 
         fetchCurrentUser: async () => {
           try {
