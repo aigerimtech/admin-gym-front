@@ -9,14 +9,22 @@ interface CreateUserModalProps {
 
 const CreateUserModal: React.FC<CreateUserModalProps> = ({ isActive, onClose }) => {
 
-  const [newUser, setNewUser] = useState({
+  const [newUser, setNewUser] = useState<{
+    first_name: string;
+    last_name: string;
+    phone: string;
+    email: string;
+    password: string;
+    role: "user";
+  }>({
     first_name: "",
     last_name: "",
     phone: "",
     email: "",
     password: "",
-    role: "user" as "user" | "admin" , 
+    role: "user",
   });
+  
 
   const { createUser } = useAdminStore(); 
 

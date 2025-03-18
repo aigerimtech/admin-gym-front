@@ -8,7 +8,7 @@ import SectionTitleLineWithButton from "../components/Section/TitleLineWithButto
 import { getPageTitle } from "../config";
 import { useSubscriptionStore } from "../stores/subscription/subscriptionStore";
 import { useAuthStore } from "../stores/auth/authStore";
-import { useAdminStore } from "../stores/admin/adminStore"; // Import admin store
+import { useAdminStore } from "../stores/admin/adminStore";
 import Head from "next/head";
 
 const SubscriptionsPage = () => {
@@ -189,7 +189,7 @@ const SubscriptionsPage = () => {
             <p className="text-center mb-4">No active subscription found. Please enter payment details below.</p>
           )}
 
-          {isPaymentFormVisible && !subscription && currentUser && !currentAdmin && (
+          {isPaymentFormVisible && currentUser && !currentAdmin && (
             <div className="mt-6 border p-6 rounded-lg bg-gray-50 shadow-md">
               <h3 className="text-lg font-semibold mb-4">Enter Payment Details</h3>
 
