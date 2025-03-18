@@ -1,8 +1,9 @@
 import {
   mdiMonitor, 
-  mdiTable,
+  mdiCalendar,
   mdiViewList,
   mdiAccountGroup,
+  mdiClipboardCheck
 } from '@mdi/js'
 import { MenuAsideItem } from './interfaces'
 
@@ -13,9 +14,9 @@ export const menuAsideUser: MenuAsideItem[] = [
     label: 'Dashboard',
   },
   {
-    href: '/tables',
-    label: 'Tables',
-    icon: mdiTable,
+    href: '/sessions',
+    label: 'Sessions',
+    icon: mdiCalendar,
   },
   {
     href: '/subscriptions',
@@ -31,9 +32,9 @@ export const menuAsideAdmin: MenuAsideItem[] = [
     label: 'Dashboard',
   },
   {
-    href: '/tables',
-    label: 'Tables',
-    icon: mdiTable,
+    href: '/sessions',
+    label: 'Sessions',
+    icon: mdiCalendar,
   },
   {
     href: '/subscriptions',
@@ -47,7 +48,7 @@ export const menuAsideAdmin: MenuAsideItem[] = [
   },
   {
     href: '/attendance',
-    icon: mdiAccountGroup, 
+    icon: mdiClipboardCheck, 
     label: 'Attendance',
   },
 ]

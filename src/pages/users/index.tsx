@@ -39,7 +39,7 @@ const UsersPage = () => {
       setLoading(false);
     };
     checkAuth();
-  }, []);
+  }, [fetchCurrentUser]);
 
   useEffect(() => {
     if (!loading) {

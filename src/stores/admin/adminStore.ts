@@ -1,8 +1,7 @@
 import { create } from "zustand";
 import { apiClient } from "../api/apiCLient";
 import { getToken } from "../utils/token";
-import { useSubscriptionStore } from "../subscription/subscriptionStore"; 
-import { Subscription } from "../subscription/subscriptionStore";
+import { Subscription, useSubscriptionStore } from "../../stores/subscription/subscriptionStore";
 
 export interface User {
   id: number;
@@ -11,7 +10,7 @@ export interface User {
   email: string;
   phone: string;
   role: "user" | "admin";
-  access_level: "client" | "admin";
+  access_level: "client" | "superadmin";
   status: "active" | "blocked";
   subscription?: Subscription | null;
 }
@@ -34,42 +33,50 @@ export const useAdminStore = create<AdminState>((set) => ({
 
   fetchUsers: async () => {
     const token = getToken();
-    if (!token) {
-      console.warn("No token found, cannot fetch users.");
-      return;
-    }
-
+    if (!token) return;
+  
     try {
       const userResponse = await apiClient.get("/users", {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      let users: User[] = userResponse.data.filter((user: User) => user.role !== "admin");
-
-      await useSubscriptionStore.getState().fetchSubscriptions();
-      const subscriptions: Subscription[] = useSubscriptionStore.getState().subscriptions as unknown as Subscription[];
-
-      if (Array.isArray(subscriptions)) {
-        users = users.map((user) => {
-          const userSubscription = subscriptions.find((sub) => sub.user?.id === user.id);
-          return {
-            ...user,
-            subscription: userSubscription ?? null, 
-          };
+  
+      let users: User[] = userResponse.data; 
+  
+      const currentAdmin = users.find(user => user.access_level === "superadmin");
+      if (!currentAdmin) {
+        await useSubscriptionStore.getState().fetchSubscriptions();
+        const subscriptions: Subscription[] = useSubscriptionStore.getState().subscriptions as unknown as Subscription[];
+  
+        if (Array.isArray(subscriptions)) {
+          users = users.map((user) => {
+            const userSubscription = subscriptions.find((sub) => sub.user?.id === user.id);
+            return {
+              ...user,
+              subscription: userSubscription ?? null,
+            };
+          });
+        }
+      } else {
+        const subscriptionResponse = await apiClient.get("/subscription/all", {
+          headers: { Authorization: `Bearer ${token}` },
         });
+        
+        const subscriptions: Subscription[] = subscriptionResponse.data;
+  
+        if (Array.isArray(subscriptions)) {
+          users = users.map((user) => ({
+            ...user,
+            subscription: subscriptions.find((sub) => sub.user?.id === user.id) || null,
+          }));
+        }
       }
-
-      users = users.map((user) => ({
-        ...user,
-        subscription: subscriptions.find((sub) => sub.user?.id === user.id) || null,
-      }));
-
-      set({ users });
+  
+      set({ users, currentAdmin });
     } catch (error) {
       console.error("Error fetching users or subscriptions:", error);
     }
   },
-
+  
   fetchUserById: async (id) => {
     const token = getToken();
     if (!token) {
