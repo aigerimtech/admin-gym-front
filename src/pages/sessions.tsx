@@ -4,6 +4,7 @@ import BookingModal from "../components/CardBox/Component/BookSessionModal";
 import SectionMain from "../components/Section/Main";
 import SectionTitle from "../components/Section/Title";
 import CardBox from "../components/CardBox";
+import {mdiCalendar} from "@mdi/js";
 
 const SessionPage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -29,7 +30,7 @@ const SessionPage: React.FC = () => {
 
   return (
     <SectionMain>
-      <SectionTitle>Book a Session</SectionTitle>
+      <SectionTitle icon={mdiCalendar}>Book a Session</SectionTitle>
 
       <CardBox className="mt-6">
         <div className="flex flex-col items-center p-6">

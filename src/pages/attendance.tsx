@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { mdiCheckCircle, mdiTrashCan } from "@mdi/js";
+import {mdiCalendar, mdiCheckCircle, mdiClipboardCheck, mdiTrashCan} from "@mdi/js";
 import Icon from "@mdi/react";
 import CardBox from "../components/CardBox";
 import SectionMain from "../components/Section/Main";
@@ -22,7 +22,7 @@ const AttendancePage = () => {
 
   return (
     <SectionMain className="mt-2"> 
-      <SectionTitle>Attendance Management</SectionTitle>
+      <SectionTitle icon={mdiClipboardCheck}>Attendance Management</SectionTitle>
       <CardBox>
         <div className="flex items-center gap-4 mb-6">
           <label className="font-medium">Select Date:</label>
