@@ -1,26 +1,23 @@
 import React, { ReactNode } from 'react';
+import IconRounded from "../Icon/Rounded";
 
 type Props = {
   custom?: boolean;
   first?: boolean;
   last?: boolean;
+  icon: any;
   className?: string; // Added className prop
   children: ReactNode;
 };
 
-const SectionTitle = ({ custom = false, first = false, last = false, className = '', children }: Props) => {
-  let classAddon = '-my-6';
-
-  if (first) {
-    classAddon = '-mb-6';
-  } else if (last) {
-    classAddon = '-mt-6';
-  }
-
+const SectionTitle = ({ custom = false, first = false, last = false, className = '', children, icon }: Props) => {
   return (
-    <section className={`py-24 px-6 lg:px-0 lg:max-w-2xl lg:mx-auto text-center ${classAddon} ${className}`}>
-      {custom ? children : <h1 className="text-2xl text-gray-500 dark:text-slate-400">{children}</h1>}
-    </section>
+      <section className={`pt-6 mb-6 flex items-center justify-between`}>
+        <div className="flex items-center justify-start">
+            {icon && <IconRounded icon={icon} color="light" className="mr-3" bg />}
+          <h1 className={`leading-tight text-3xl`}>{children}</h1>
+        </div>
+      </section>
   );
 };
 

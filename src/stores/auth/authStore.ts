@@ -121,6 +121,7 @@ export const useAuthStore = create<AuthState>()(
             set({ currentUser: user, isAuthenticated: true, isAdmin });
           } catch (error) {
             console.error("Failed to fetch user profile:", error);
+            set({token: null})
           }
         },
 

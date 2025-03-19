@@ -19,9 +19,9 @@ export const menuAsideUser: MenuAsideItem[] = [
     icon: mdiCalendar,
   },
   {
-    href: '/subscriptions',
+    href: '/subscription',
     icon: mdiViewList,
-    label: 'Subscriptions',
+    label: 'Subscription',
   },
 ]
 

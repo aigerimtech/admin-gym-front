@@ -104,55 +104,53 @@ const UsersPage = () => {
           </button>
         </SectionTitleLineWithButton>
 
-        <NotificationBar color="info">Manage users efficiently.</NotificationBar>
-
         <CardBox hasTable>
           <table className="w-full border-collapse border border-gray-300">
             <thead>
-              <tr className="bg-gray-100">
-                <th className="border p-2">#</th>
-                <th className="border p-2">Full Name</th>
-                <th className="border p-2">Phone</th>
-                <th className="border p-2">Email</th>
-                <th className="border p-2">Subscription Type</th>
-                <th className="border p-2">Start Date</th>
-                <th className="border p-2">End Date</th>
-                <th className="border p-2">Status</th>
-                <th className="border p-2">Actions</th>
-              </tr>
+            <tr className="bg-gray-100">
+              <th className="border p-2">#</th>
+              <th className="border p-2">Full Name</th>
+              <th className="border p-2">Phone</th>
+              <th className="border p-2">Email</th>
+              <th className="border p-2">Access Level</th>
+              <th className="border p-2">Role</th>
+              <th className="border p-2">Subscription Type</th>
+              <th className="border p-2">Status</th>
+              <th className="border p-2">Actions</th>
+            </tr>
             </thead>
             <tbody>
-              {displayedUsers.length > 0 ? (
+            {displayedUsers.length > 0 ? (
                 displayedUsers.map((user) => (
-                  <tr key={user.id} className="border-b">
-                    <td className="border p-2">{user.id}</td>
-                    <td className="border p-2">{user.first_name} {user.last_name}</td>
-                    <td className="border p-2">{user.phone}</td>
-                    <td className="border p-2">{user.email}</td>
-                    <td className="border p-2">{user.subscription?.type ?? "No Subscription"}</td>
-                    <td className="border p-2">{user.subscription?.start_date ?? "No Subscription"}</td>
-                    <td className="border p-2">{user.subscription?.end_date ?? "No Subscription"}</td>
-                    <td className="border p-2">
-                      <span className={user.subscription?.status === "active" ? "text-green-500" : "text-red-500"}>
-                        {user.subscription?.status ?? "N/A"}
+                    <tr key={user.id} className="border-b">
+                      <td className="border p-2">{user.id}</td>
+                      <td className="border p-2">{user.first_name} {user.last_name}</td>
+                      <td className="border p-2">{user.phone}</td>
+                      <td className="border p-2">{user.email}</td>
+                      <td className="border p-2">{user.access_level}</td>
+                      <td className="border p-2">{user.role}</td>
+                      <td className="border p-2">{user.subscription?.type ?? "No Subscription"}</td>
+                      <td className="border p-2">
+                      <span className={user.status === "active" ? "text-green-500" : "text-red-500"}>
+                        {user.status ?? "N/A"}
                       </span>
-                    </td>
-                    <td className="border p-2 flex gap-2">
-                      <button className="text-blue-500 flex items-center gap-1" onClick={() => handleEdit(user)}>
-                        <Icon path={mdiPencil} size={0.8} /> Edit
-                      </button>
-                      <button 
-                        className="text-red-500 flex items-center gap-1" 
-                        onClick={() => deleteUser(user.id)}
-                      >
-                        <Icon path={mdiTrashCan} size={0.8} /> Delete
-                      </button>
-                    </td>
-                  </tr>
+                      </td>
+                      <td className="border p-2 flex gap-2">
+                        <button className="text-blue-500 flex items-center gap-1" onClick={() => handleEdit(user)}>
+                          <Icon path={mdiPencil} size={0.8}/> Edit
+                        </button>
+                        <button
+                            className="text-red-500 flex items-center gap-1"
+                            onClick={() => deleteUser(user.id)}
+                        >
+                          <Icon path={mdiTrashCan} size={0.8}/> Delete
+                        </button>
+                      </td>
+                    </tr>
                 ))
-              ) : (
+            ) : (
                 <tr>
-                  <td colSpan={9} className="text-center p-4">
+                <td colSpan={9} className="text-center p-4">
                     No users found.
                   </td>
                 </tr>
