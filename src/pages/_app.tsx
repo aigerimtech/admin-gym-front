@@ -3,10 +3,10 @@ import Script from "next/script";
 import type {AppProps} from "next/app";
 import type {ReactElement, ReactNode} from "react";
 import type {NextPage} from "next";
-import Head from "next/head";
 import {Provider} from "react-redux";
 import {store} from "../stores/store";
 import "../css/main.css";
+import "../components/Calendar/Calendar.css"
 import LayoutAuthenticated from "../layouts/Authenticated";
 import {useAuthStore} from "../stores/auth/authStore";
 import {useRouter} from "next/router";

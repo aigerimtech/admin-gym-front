@@ -9,6 +9,7 @@
     "format": "prettier 'src/**/*.{tsx,ts,js}' --write"
   },
   "dependencies": {
+    "@daypilot/daypilot-lite-react": "^3.32.1",
     "@mdi/js": "^7.0.96",
     "@mdi/react": "^1.6.1",
     "@reduxjs/toolkit": "^1.9.5",
