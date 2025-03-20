@@ -1,75 +1,40 @@
-import { useState } from "react";
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
-import BookingModal from "../components/CardBox/Component/BookSessionModal";
+import React, {useState} from "react";
 import SectionMain from "../components/Section/Main";
-import SectionTitle from "../components/Section/Title";
-import CardBox from "../components/CardBox";
-import {mdiCalendar} from "@mdi/js";
+import {mdiCalendar, mdiPlus} from "@mdi/js";
 import TimeTable from "../components/Calendar/TimeTable";
+import {getPageTitle} from "../config";
+import Head from "next/head";
+import Icon from "@mdi/react";
+import SectionTitleLineWithButton from "../components/Section/TitleLineWithButton";
+import Modal from "../components/CardBox/Modal";
+import Button from "../components/Button";
+import CreateSessionModal from "../components/CardBox/Component/CreateSessionModal";
 
 const SessionPage: React.FC = () => {
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleDateClick = (date: Date) => {
-    setSelectedDate(date);
-    setIsModalOpen(true); 
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false); 
-  };
-
-  const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
-  const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
-
-  const daysInMonth = eachDayOfInterval({
-    start: startOfMonth(currentMonth),
-    end: endOfMonth(currentMonth),
-  });
-
-  return (
-    <SectionMain>
-      <SectionTitle icon={mdiCalendar}>Sessions</SectionTitle>
-
-      {/*<CardBox className="mt-6">*/}
-      {/*  <div className="flex flex-col items-center p-6">*/}
-      {/*    <div className="flex items-center justify-between w-full max-w-lg mb-4">*/}
-      {/*      <button onClick={prevMonth} className="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400">*/}
-      {/*        ← Previous*/}
-      {/*      </button>*/}
-      {/*      <h2 className="text-xl font-bold">{format(currentMonth, "MMMM yyyy")}</h2>*/}
-      {/*      <button onClick={nextMonth} className="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400">*/}
-      {/*        Next →*/}
-      {/*      </button>*/}
-      {/*    </div>*/}
-
-      {/*    <div className="grid grid-cols-7 gap-2 mb-6">*/}
-      {/*      {daysInMonth.map((day) => (*/}
-      {/*        <button*/}
-      {/*          key={day.toString()}*/}
-      {/*          onClick={() => handleDateClick(day)} */}
-      {/*          className="w-10 h-10 rounded-full bg-gray-200 hover:bg-blue-300"*/}
-      {/*        >*/}
-      {/*          {format(day, "d")}*/}
-      {/*        </button>*/}
-      {/*      ))}*/}
-      {/*    </div>*/}
-      {/*  </div>*/}
-      {/*</CardBox>*/}
-
-      {/*{selectedDate && (*/}
-      {/*  <BookingModal*/}
-      {/*    isOpen={isModalOpen} */}
-      {/*    onClose={handleCloseModal} */}
-      {/*    selectedDate={selectedDate} */}
-      {/*  />*/}
-      {/*)}*/}
-
-    <TimeTable/>
-    </SectionMain>
-  );
+    return (
+        <>
+            <Head>
+                <title>{getPageTitle('Sessions')}</title>
+            </Head>
+            <SectionMain>
+                <SectionTitleLineWithButton icon={mdiCalendar} title="Sessions" main>
+                    <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="bg-blue-500 text-white px-4 py-2 rounded flex items-center gap-1"
+                    >
+                        <Icon path={mdiPlus} size={0.8}/> Create Session
+                    </button>
+                </SectionTitleLineWithButton>
+                <TimeTable/>
+                <CreateSessionModal
+                    isActive={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                />
+            </SectionMain>
+        </>
+    );
 };
 
 export default SessionPage;

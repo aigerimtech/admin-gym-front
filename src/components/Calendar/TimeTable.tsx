@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { DayPilot, DayPilotCalendar, DayPilotMonth, DayPilotNavigator } from "@daypilot/daypilot-lite-react";
+import { DayPilot, DayPilotCalendar, DayPilotMonth } from "@daypilot/daypilot-lite-react";
+import {useAdminSessionStore} from "../../stores/sessions/adminSessions";
 
 type ViewType = "Day" | "Week" | "Month";
 
@@ -51,8 +52,10 @@ const teams = [
 ];
 
 const TimeTable = () => {
+    const fetchSessions = useAdminSessionStore(state => state.fetchSessions)
+    const sessions = useAdminSessionStore(state => state.sessions)
     const [view, setView] = useState<ViewType>("Week");
-    const [startDate, setStartDate] = useState<DayPilot.Date>(DayPilot.Date.today());
+    const [startDate] = useState<DayPilot.Date>(DayPilot.Date.today());
     const [events, setEvents] = useState<DayPilot.EventData[]>([]);
 
     type AnyCalendar = DayPilot.Calendar | DayPilot.Month;
@@ -84,6 +87,8 @@ const TimeTable = () => {
         const assignedTo = args.data.tags?.assigned || "Unassigned";
         const location = args.data.tags?.location || "";
         const teamName = args.data.tags?.team || "No Team";
+        const capacity = args.data.tags?.capacity || 0;
+        const availableSlots = args.data.tags?.available_slots || 0;
         const teamBadgeColor = DayPilot.ColorUtil.darker(eventColor);
         args.data.html = "";
         args.data.areas = [
@@ -103,17 +108,17 @@ const TimeTable = () => {
                 left: 5,
                 right: 5,
                 height: 18,
-                text: `Assigned: ${assignedTo}`,
+                text: `Trainer: ${assignedTo}`,
                 fontColor: "#fff",
                 style: "font-size: 11px; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
             },
             {
-                id: "location",
+                id: "slots",
                 top: 42,
                 left: 5,
                 right: 5,
                 height: 18,
-                text: location ? `Location: ${location}` : "",
+                text: `Slots: ${availableSlots}/${capacity}`,
                 fontColor: "#fff",
                 style: "font-size: 11px; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
             },
@@ -155,6 +160,8 @@ const TimeTable = () => {
         const assignedTo = args.data.tags?.assigned || "Unassigned";
         const location = args.data.tags?.location || "";
         const teamName = args.data.tags?.team || "No Team";
+        const capacity = args.data.tags?.capacity || 0;
+        const availableSlots = args.data.tags?.available_slots || 0;
         args.data.html = "";
         args.data.areas = [
             {
@@ -183,18 +190,22 @@ const TimeTable = () => {
         ];
         args.data.toolTip =
             "Title: " + args.data.text + "\n" +
-            "Assigned: " + assignedTo + "\n" +
+            "Trainer: " + assignedTo + "\n" +
             "Location: " + location + "\n" +
-            "Team: " + teamName;
+            "Team: " + teamName + "\n" +
+            "Capacity: " + capacity + "\n" +
+            "Available Slots: " + availableSlots;
     };
 
     const editEvent = async (e: DayPilot.Event) => {
         const form = [
             { name: "Event text", id: "text", type: "text" },
             { name: "Event color", id: "tags.color", type: "select", options: colors },
-            { name: "Assigned to", id: "tags.assigned", type: "select", options: people },
+            { name: "Trainer", id: "tags.assigned", type: "select", options: people },
             { name: "Location", id: "tags.location", type: "select", options: locations },
-            { name: "Team", id: "tags.team", type: "select", options: teams }
+            { name: "Team", id: "tags.team", type: "select", options: teams },
+            { name: "Capacity", id: "tags.capacity", type: "number" },
+            { name: "Available Slots", id: "tags.available_slots", type: "number" }
         ];
         const modal = await DayPilot.Modal.form(form, e.data);
         if (modal.canceled) {
@@ -232,107 +243,29 @@ const TimeTable = () => {
     });
 
     useEffect(() => {
-        const first = DayPilot.Date.today().firstDayOfWeek().addDays(1);
-        const data = [
-            {
-                id: 1,
-                text: "Event 1",
-                start: first.addHours(10),
-                end: first.addHours(12),
-                tags: {
-                    color: "#cd5c5c",
-                    assigned: "Amélie",
-                    location: "Conference Room A",
-                    team: "Marketing"
-                }
-            },
-            {
-                id: 2,
-                text: "Event 2",
-                start: first.addDays(1).addHours(14),
-                end: first.addDays(1).addHours(16),
-                tags: {
-                    color: "#93c47d",
-                    assigned: "Bernhard",
-                    location: "Online Meeting",
-                    team: "Sales"
-                }
-            },
-            {
-                id: 9,
-                text: "Event 9",
-                start: first.addHours(13),
-                end: first.addHours(15),
-                tags: {
-                    color: "#76a5af",
-                    assigned: "Carlo",
-                    location: "HQ - Floor 2",
-                    team: "Development"
-                }
-            },
-            {
-                id: 3,
-                text: "Event 3",
-                start: first.addDays(1).addHours(9),
-                end: first.addDays(1).addHours(11),
-                tags: {
-                    color: "#ffd966",
-                    assigned: "Diana",
-                    location: "Conference Room B",
-                    team: "HR"
-                }
-            },
-            {
-                id: 4,
-                text: "Event 4",
-                start: first.addDays(1).addHours(11).addMinutes(30),
-                end: first.addDays(1).addHours(13).addMinutes(30),
-                tags: {
-                    color: "#f6b26b",
-                    assigned: "Eva",
-                    location: "Conference Room B",
-                    team: "Product"
-                }
-            },
-            {
-                id: 5,
-                text: "Event 5",
-                start: first.addDays(4).addHours(9),
-                end: first.addDays(4).addHours(11),
-                tags: {
-                    color: "#8e7cc3",
-                    assigned: "Francesco",
-                    location: "Skype Link",
-                    team: "Marketing"
-                }
-            },
-            {
-                id: 6,
-                text: "Event 6",
-                start: first.addDays(4).addHours(13),
-                end: first.addDays(4).addHours(15),
-                tags: {
-                    color: "#6fa8dc",
-                    assigned: "Lotte",
-                    location: "HQ - Floor 1",
-                    team: "Finance"
-                }
-            },
-            {
-                id: 8,
-                text: "Event 8",
-                start: first.addDays(5).addHours(13),
-                end: first.addDays(5).addHours(15),
-                tags: {
-                    color: "#b6d7a8",
-                    assigned: "Erik",
-                    location: "Zoom Link",
-                    team: "Legal"
-                }
-            }
-        ];
-        setEvents(data);
+        fetchSessions();
     }, []);
+
+    useEffect(() => {
+        if (sessions) {
+            // Transform sessions data into DayPilot event format
+            const transformedData = sessions.map((session) => ({
+                id: session.id,  // Use the session ID
+                text: session.name,  // Use the session name as the event text
+                start: new DayPilot.Date(session.start_time),  // Convert date_time to DayPilot.Date
+                end: new DayPilot.Date(session.end_time).addHours(1),  // Assuming a 1-hour duration
+                tags: {
+                    color: "#cd5c5c",  // You can assign a color dynamically or use a default
+                    assigned: `${session.trainer.first_name} ${session.trainer.last_name}`,  // Use the trainer's name
+                    location: "GYM",  // You can add a location if needed
+                    team: session.trainer.first_name,  // You can categorize by team or leave it blank
+                    capacity: session.capacity,  // Add capacity
+                    available_slots: session.available_slots  // Add available slots
+                }
+            }));
+            setEvents(transformedData);  // Set the transformed data as events
+        }
+    }, [sessions]);
 
     return (
         <div className={"container"}>
@@ -343,7 +276,6 @@ const TimeTable = () => {
                         <button onClick={() => setView("Week")} className={view === "Week" ? "selected" : ""}>Week</button>
                         <button onClick={() => setView("Month")} className={view === "Month" ? "selected" : ""}>Month</button>
                     </div>
-                    <button onClick={() => setStartDate(DayPilot.Date.today())} className={"standalone"}>Today</button>
                 </div>
                 <DayPilotCalendar
                     viewType={"Day"}

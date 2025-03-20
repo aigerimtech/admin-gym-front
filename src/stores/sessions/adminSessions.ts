@@ -1,18 +1,33 @@
 import { create } from "zustand";
 import { apiClient } from "../api/apiCLient";
 import { getToken } from "../utils/token";
+import {User} from "../auth/authStore";
 
 interface Session {
-  id: number;
-  title: string;
-  date: string;
+  id: number
+  name:  string,
+  trainer: User,
+  start_time: string,
+  end_time: string,
+  capacity: number,
+  available_slots: number,
+  registrations?: null | User[]
+}
+
+interface CreateSession {
+  name: string,
+  trainer: number,
+  start_time: string,
+  end_time: string,
+  capacity: number,
+  available_slots: number,
 }
 
 interface AdminSessionState {
   sessions: Session[];
   fetchSessions: () => Promise<void>;
-  createSession: (sessionData: { title: string; date: string }) => Promise<void>;
-  updateSession: (id: number, sessionData: Partial<Session>) => Promise<void>;
+  createSession: (sessionData: CreateSession) => Promise<void>;
+  updateSession: (id: number, sessionData: Partial<CreateSession>) => Promise<void>;
   deleteSession: (id: number) => Promise<void>;
 }
 

@@ -6,7 +6,8 @@ import type {NextPage} from "next";
 import {Provider} from "react-redux";
 import {store} from "../stores/store";
 import "../css/main.css";
-import "../components/Calendar/Calendar.css"
+import "../components/Calendar/Calendar.css";
+import "flatpickr/dist/flatpickr.min.css";
 import LayoutAuthenticated from "../layouts/Authenticated";
 import {useAuthStore} from "../stores/auth/authStore";
 import {useRouter} from "next/router";
