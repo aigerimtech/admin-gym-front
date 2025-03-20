@@ -1,34 +1,34 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import { DayPilot, DayPilotCalendar, DayPilotMonth } from "@daypilot/daypilot-lite-react";
+import React, {useEffect, useState} from 'react';
+import {DayPilot, DayPilotCalendar, DayPilotMonth} from "@daypilot/daypilot-lite-react";
 import {useAdminSessionStore} from "../../stores/sessions/adminSessions";
 
 type ViewType = "Day" | "Week" | "Month";
 
 const colors = [
-    { name: "Dark Green", id: "#228b22" },
-    { name: "Green", id: "#6aa84f" },
-    { name: "Yellow", id: "#f1c232" },
-    { name: "Orange", id: "#e69138" },
-    { name: "Indian Red", id: "#cd5c5c" },
-    { name: "Fire Brick", id: "#b22222" },
-    { name: "Purple", id: "#9370db" },
-    { name: "Turquoise", id: "#40e0d0" },
-    { name: "Light Blue", id: "#add8e6" },
-    { name: "Sky Blue", id: "#87ceeb" },
-    { name: "Blue", id: "#3d85c6" },
+    {name: "Dark Green", id: "#228b22"},
+    {name: "Green", id: "#6aa84f"},
+    {name: "Yellow", id: "#f1c232"},
+    {name: "Orange", id: "#e69138"},
+    {name: "Indian Red", id: "#cd5c5c"},
+    {name: "Fire Brick", id: "#b22222"},
+    {name: "Purple", id: "#9370db"},
+    {name: "Turquoise", id: "#40e0d0"},
+    {name: "Light Blue", id: "#add8e6"},
+    {name: "Sky Blue", id: "#87ceeb"},
+    {name: "Blue", id: "#3d85c6"},
 ];
 
 const people = [
-    { name: "Amélie", id: "Amélie" },
-    { name: "Bernhard", id: "Bernhard" },
-    { name: "Carlo", id: "Carlo" },
-    { name: "Diana", id: "Diana" },
-    { name: "Eva", id: "Eva" },
-    { name: "Francesco", id: "Francesco" },
-    { name: "Lotte", id: "Lotte" },
-    { name: "Erik", id: "Erik" },
+    {name: "Amélie", id: "Amélie"},
+    {name: "Bernhard", id: "Bernhard"},
+    {name: "Carlo", id: "Carlo"},
+    {name: "Diana", id: "Diana"},
+    {name: "Eva", id: "Eva"},
+    {name: "Francesco", id: "Francesco"},
+    {name: "Lotte", id: "Lotte"},
+    {name: "Erik", id: "Erik"},
 ];
 
 const locations = [
@@ -54,6 +54,8 @@ const teams = [
 const TimeTable = () => {
     const fetchSessions = useAdminSessionStore(state => state.fetchSessions)
     const sessions = useAdminSessionStore(state => state.sessions)
+    const updateSession = useAdminSessionStore(state => state.updateSession)
+    const deleteSession = useAdminSessionStore(state => state.deleteSession)
     const [view, setView] = useState<ViewType>("Week");
     const [startDate] = useState<DayPilot.Date>(DayPilot.Date.today());
     const [events, setEvents] = useState<DayPilot.EventData[]>([]);
@@ -199,13 +201,13 @@ const TimeTable = () => {
 
     const editEvent = async (e: DayPilot.Event) => {
         const form = [
-            { name: "Event text", id: "text", type: "text" },
-            { name: "Event color", id: "tags.color", type: "select", options: colors },
-            { name: "Trainer", id: "tags.assigned", type: "select", options: people },
-            { name: "Location", id: "tags.location", type: "select", options: locations },
-            { name: "Team", id: "tags.team", type: "select", options: teams },
-            { name: "Capacity", id: "tags.capacity", type: "number" },
-            { name: "Available Slots", id: "tags.available_slots", type: "number" }
+            {name: "Event text", id: "text", type: "text"},
+            {name: "Event color", id: "tags.color", type: "select", options: colors},
+            {name: "Trainer", id: "tags.assigned", type: "select", options: people},
+            {name: "Location", id: "tags.location", type: "select", options: locations},
+            {name: "Team", id: "tags.team", type: "select", options: teams},
+            {name: "Capacity", id: "tags.capacity", type: "number"},
+            {name: "Available Slots", id: "tags.available_slots", type: "number"}
         ];
         const modal = await DayPilot.Modal.form(form, e.data);
         if (modal.canceled) {
@@ -219,6 +221,10 @@ const TimeTable = () => {
                     : item
             )
         );
+    };
+
+    const onEventMoved = async (id: number, data: { start_time: string, end_time: string }) => {
+        updateSession(id, data);
     };
 
     const contextMenu = new DayPilot.Menu({
@@ -245,6 +251,7 @@ const TimeTable = () => {
     useEffect(() => {
         fetchSessions();
     }, []);
+
 
     useEffect(() => {
         if (sessions) {
@@ -273,16 +280,22 @@ const TimeTable = () => {
                 <div className={"toolbar"}>
                     <div className={"toolbar-group"}>
                         <button onClick={() => setView("Day")} className={view === "Day" ? "selected" : ""}>Day</button>
-                        <button onClick={() => setView("Week")} className={view === "Week" ? "selected" : ""}>Week</button>
-                        <button onClick={() => setView("Month")} className={view === "Month" ? "selected" : ""}>Month</button>
+                        <button onClick={() => setView("Week")} className={view === "Week" ? "selected" : ""}>Week
+                        </button>
+                        <button onClick={() => setView("Month")} className={view === "Month" ? "selected" : ""}>Month
+                        </button>
                     </div>
                 </div>
                 <DayPilotCalendar
                     viewType={"Day"}
                     startDate={startDate}
                     events={events}
+                    onEventMoved={async args => onEventMoved(args.e.data.id, {
+                        start_time: args.e.data.start.toString(),
+                        end_time: args.e.data.end.toString()
+                    })}
                     visible={view === "Day"}
-                    durationBarVisible={false}
+                    durationBarVisible={true}
                     contextMenu={contextMenu}
                     onEventClick={async args => editEvent(args.e)}
                     onTimeRangeSelected={onTimeRangeSelected}
@@ -293,6 +306,10 @@ const TimeTable = () => {
                     viewType={"Week"}
                     startDate={startDate}
                     events={events}
+                    onEventMoved={async args => onEventMoved(args.e.data.id, {
+                        start_time: args.e.data.start.toString(),
+                        end_time: args.e.data.end.toString()
+                    })}
                     visible={view === "Week"}
                     durationBarVisible={false}
                     contextMenu={contextMenu}
@@ -304,6 +321,10 @@ const TimeTable = () => {
                 <DayPilotMonth
                     startDate={startDate}
                     events={events}
+                    onEventMoved={async args => onEventMoved(args.e.data.id, {
+                        start_time: args.e.data.start.toString(),
+                        end_time: args.e.data.end.toString()
+                    })}
                     visible={view === "Month"}
                     eventHeight={50}
                     eventBarVisible={false}

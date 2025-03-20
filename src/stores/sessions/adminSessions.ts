@@ -31,7 +31,7 @@ interface AdminSessionState {
   deleteSession: (id: number) => Promise<void>;
 }
 
-export const useAdminSessionStore = create<AdminSessionState>((set) => ({
+export const useAdminSessionStore = create<AdminSessionState>((set, get) => ({
   sessions: [],
 
   fetchSessions: async () => {
@@ -56,7 +56,8 @@ export const useAdminSessionStore = create<AdminSessionState>((set) => ({
       const response = await apiClient.post("/sessions", sessionData, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      set((state) => ({ sessions: [...state.sessions, response.data] }));
+      const {fetchSessions} = get()
+      fetchSessions()
     } catch (error) {
       console.error("Error creating session:", error);
     }
@@ -70,9 +71,6 @@ export const useAdminSessionStore = create<AdminSessionState>((set) => ({
       const response = await apiClient.put(`/sessions/${id}`, sessionData, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      set((state) => ({
-        sessions: state.sessions.map((s) => (s.id === id ? { ...s, ...response.data } : s)),
-      }));
     } catch (error) {
       console.error("Error updating session:", error);
     }
