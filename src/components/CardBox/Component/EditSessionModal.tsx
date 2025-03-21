@@ -4,13 +4,15 @@ import Flatpickr from "react-flatpickr";
 import {useAdminSessionStore} from "../../../stores/sessions/adminSessions";
 
 interface CreateUserModalProps {
+    sessionId: number
     isActive: boolean;
     onClose: () => void;
 }
 
-const CreateUserModal: React.FC<CreateUserModalProps> = ({ isActive, onClose }) => {
+const EditSessionModal: React.FC<CreateUserModalProps> = ({ isActive, onClose, sessionId }) => {
     const createSession = useAdminSessionStore(state => state.createSession)
-    const [formData, setFormData] = useState({
+    const session = useAdminSessionStore(state => state.sessions).find(session => session.id === sessionId)
+    const [formData, setFormData] = useState<any>(session || {
         name: "",
         trainer: "",
         start_time: "",
@@ -63,7 +65,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ isActive, onClose }) 
                 <input
                     className="border p-2 w-full mb-2"
                     name="trainer"
-                    value={formData.trainer}
+                    value={formData.trainer.id}
                     onChange={handleInputChange}
                     placeholder="Enter trainer ID"
                 />
@@ -99,4 +101,4 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ isActive, onClose }) 
     );
 };
 
-export default CreateUserModal;
+export default EditSessionModal;

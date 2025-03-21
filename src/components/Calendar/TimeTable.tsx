@@ -3,6 +3,7 @@
 import React, {useEffect, useState} from 'react';
 import {DayPilot, DayPilotCalendar, DayPilotMonth} from "@daypilot/daypilot-lite-react";
 import {useAdminSessionStore} from "../../stores/sessions/adminSessions";
+import EditSessionModal from "../CardBox/Component/EditSessionModal";
 
 type ViewType = "Day" | "Week" | "Month";
 
@@ -65,6 +66,9 @@ const TimeTable = () => {
     const [dayView, setDayView] = useState<DayPilot.Calendar>();
     const [weekView, setWeekView] = useState<DayPilot.Calendar>();
     const [monthView, setMonthView] = useState<DayPilot.Month>();
+
+    const [isModalEdit, setIsModalEdit] = useState<boolean>(false);
+    const [editingId, setEditingId] = useState<number | null>(null);
 
     const onTimeRangeSelected = async (args: DayPilot.CalendarTimeRangeSelectedArgs | DayPilot.MonthTimeRangeSelectedArgs) => {
         const calendar = args.control;
@@ -232,8 +236,7 @@ const TimeTable = () => {
             {
                 text: "Delete",
                 onClick: async args => {
-                    const calendar: AnyCalendar = args.source.calendar;
-                    calendar.events.remove(args.source);
+                    deleteSession(args.source.data.id)
                 },
             },
             {
@@ -242,7 +245,8 @@ const TimeTable = () => {
             {
                 text: "Edit...",
                 onClick: async args => {
-                    await editEvent(args.source);
+                    setEditingId(args.source.data.id)
+                    setIsModalEdit(true);
                 }
             }
         ]
@@ -335,6 +339,14 @@ const TimeTable = () => {
                     controlRef={setMonthView}
                 />
             </div>
+            {editingId &&
+                <EditSessionModal
+                    sessionId={editingId}
+                    isActive={isModalEdit}
+                    onClose={() => {
+                        setEditingId(null)
+                        setIsModalEdit(false)
+                    }}/>}
         </div>
     );
 };
