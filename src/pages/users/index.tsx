@@ -13,7 +13,6 @@ import {useSubscriptionStore} from "../../stores/subscription/subscriptionStore"
 import {useRouter} from "next/navigation";
 import EditUserModal from "../../components/CardBox/Component/EditUserModal";
 import {useAttendanceStore} from "../../stores/attendance/attendanceStore";
-import MarkAttendanceModal from "../../components/CardBox/Component/MarkAttendanceModal";
 import CreateUserModal from "../../components/CardBox/Component/CreateUserModal";
 
 const UsersPage = () => {
@@ -191,24 +190,6 @@ const UsersPage = () => {
                     <small>Page {currentPage + 1} of {numPages}</small>
                 </div>
 
-                <div className="fixed bottom-4 right-4">
-                    <button
-                        onClick={() => {
-                            setSelectedDate(new Date().toISOString().split("T")[0]);
-                            handleMarkAttendance();
-                        }}
-                        className="bg-blue-500 text-white px-4 py-2 rounded flex items-center gap-1"
-                    >
-                        <Icon path={mdiPlus} size={0.8}/> Mark Attendance
-                    </button>
-                </div>
-
-                <MarkAttendanceModal
-                    isActive={attendanceModalActive}
-                    onClose={() => setAttendanceModalActive(false)}
-                    selectedDate={selectedDate}
-                    setSelectedDate={setSelectedDate}
-                />
 
                 <EditUserModal
                     isActive={isModalActive}

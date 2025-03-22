@@ -11,6 +11,9 @@ import "flatpickr/dist/flatpickr.min.css";
 import LayoutAuthenticated from "../layouts/Authenticated";
 import {useAuthStore} from "../stores/auth/authStore";
 import {useRouter} from "next/router";
+import Icon from "@mdi/react";
+import { mdiPlus } from "@mdi/js";
+import MarkAttendanceModal from "../components/CardBox/Component/MarkAttendanceModal";
 
 export type NextPageWithLayout<P = Record<string, unknown>, IP = P> = NextPage<P, IP> & {
     getLayout?: (page: ReactElement) => ReactNode;
@@ -25,6 +28,7 @@ function MyApp({Component, pageProps}: AppPropsWithLayout) {
     const token = useAuthStore((state) => state.token);
     const fetchCurrentUser = useAuthStore((state) => state.fetchCurrentUser)
     const [hydrated, setHydrated] = useState(false);
+    const [attendanceModalActive, setAttendanceModalActive] = useState(false);
 
     const authRoutes = ["/auth/login", "/auth/register"];
     const isAuthPage = authRoutes.includes(router.pathname);
@@ -52,6 +56,21 @@ function MyApp({Component, pageProps}: AppPropsWithLayout) {
                 {token && !isAuthPage ? (
                     <LayoutAuthenticated>
                         <Component {...pageProps} />
+                        <div className="fixed bottom-4 right-4">
+                            <button
+                                onClick={() => {
+                                    setAttendanceModalActive(true);
+                                }}
+                                className="bg-blue-500 text-white px-4 py-2 rounded flex items-center gap-1"
+                            >
+                                <Icon path={mdiPlus} size={0.8}/> Mark Attendance
+                            </button>
+                        </div>
+
+                        <MarkAttendanceModal
+                            isActive={attendanceModalActive}
+                            onClose={() => setAttendanceModalActive(false)}
+                        />
                     </LayoutAuthenticated>
                 ) : (
                     <Component {...pageProps} />
