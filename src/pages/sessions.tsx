@@ -6,7 +6,7 @@ import {getPageTitle} from "../config";
 import Head from "next/head";
 import Icon from "@mdi/react";
 import SectionTitleLineWithButton from "../components/Section/TitleLineWithButton";
-import EditSessionModal from "../components/CardBox/Component/EditSessionModal";
+import CreateSessionModal from "../components/CardBox/Component/CreateSessionModal";
 
 const SessionPage: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -26,7 +26,7 @@ const SessionPage: React.FC = () => {
                     </button>
                 </SectionTitleLineWithButton>
                 <TimeTable/>
-                <EditSessionModal
+                <CreateSessionModal
                     isActive={isModalOpen}
                     onClose={() => setIsModalOpen(false)}
                 />
