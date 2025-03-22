@@ -9,6 +9,8 @@ import NavBarMenuList from '../MenuList'
 import { useAppDispatch, useAppSelector } from '../../../stores/hooks'
 import { MenuNavBarItem } from '../../../interfaces'
 import { setDarkMode } from '../../../stores/darkModeSlice'
+import { useAuthStore } from '../../../stores/auth/authStore'
+import Button from '../../Button'
 
 type Props = {
   item: MenuNavBarItem
@@ -17,7 +19,10 @@ type Props = {
 export default function NavBarItem({ item }: Props) {
   const dispatch = useAppDispatch()
 
-  const userName = useAppSelector((state) => state.main.userName)
+  const currentUser = useAuthStore((state) => state.currentUser)
+  const setToken = useAuthStore((state) => state.setToken)
+
+  
 
   const [isDropdownActive, setIsDropdownActive] = useState(false)
 
@@ -30,7 +35,7 @@ export default function NavBarItem({ item }: Props) {
     item.isDesktopNoLabel ? 'lg:w-16 lg:justify-center' : '',
   ].join(' ')
 
-  const itemLabel = item.isCurrentUser ? userName : item.label
+  const itemLabel = item.isCurrentUser ? `${currentUser.first_name} ${currentUser.last_name}` : item.label
 
   const handleMenuClick = () => {
     if (item.menu) {
@@ -86,11 +91,11 @@ export default function NavBarItem({ item }: Props) {
 
   if (item.href) {
     return (
-      <Link href={item.href} target={item.target} className={componentClass}>
+      <button className={componentClass}>
         {NavBarItemComponentContents}
-      </Link>
+      </button>
     )
   }
 
-  return <div className={componentClass}>{NavBarItemComponentContents}</div>
+  return <div onClick={() => setToken(null)} className={componentClass}>{NavBarItemComponentContents}</div>
 }
