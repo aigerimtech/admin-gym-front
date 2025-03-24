@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { mdiViewList, mdiCashMultiple } from "@mdi/js";
-import Button from "../components/Button";
 import CardBox from "../components/CardBox";
 import NotificationBar from "../components/NotificationBar";
 import SectionMain from "../components/Section/Main";
-import SectionTitleLineWithButton from "../components/Section/TitleLineWithButton";
 import { getPageTitle } from "../config";
 import { useSubscriptionStore } from "../stores/subscription/subscriptionStore";
-import { useAuthStore } from "../stores/auth/authStore";
-import { useAdminStore } from "../stores/admin/adminStore";
 import Head from "next/head";
 import SectionTitle from "../components/Section/Title";
+import Image from "next/image";
 
 const SubscriptionTypes = ["monthly", "quarterly", "yearly"];
 
@@ -43,7 +40,7 @@ const SubscriptionPage = () => {
         alert('successfully purchased subscription');
       }
     }
-  ;}
+  }
 
   
   return (
@@ -80,7 +77,7 @@ const SubscriptionPage = () => {
               </select>
                 <div className="w-96 h-56 m-auto bg-red-100 rounded-xl relative text-white shadow-2xl transition-transform transform ml-auto">
               
-                <img className="relative object-cover w-full h-full rounded-xl" src="https://i.imgur.com/kGkSg1v.png" />
+                <img className="relative object-cover w-full h-full rounded-xl" src="https://i.imgur.com/kGkSg1v.png" alt="img:photo"/>
               
                 <div className="w-full px-8 absolute top-8">
                     <div className="flex justify-between">
@@ -90,7 +87,7 @@ const SubscriptionPage = () => {
                             </p>
                             <input onChange={(e) => setName(e.target.value)} placeholder="Karthik P" className="font-medium tracking-widest bg-transparent border-none p-0 m-0 outline-none placeholder:text-[#dad9d9]" />
                         </div>
-                        <img className="w-14 h-14" src="https://i.imgur.com/bbPHJVe.png"/>
+                        <img className="w-14 h-14" src="https://i.imgur.com/bbPHJVe.png" alt="img:photo"/>
                     </div>
                     <div className="pt-1">
                         <p className="font-light">

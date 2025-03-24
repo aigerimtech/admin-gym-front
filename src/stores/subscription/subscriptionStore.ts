@@ -26,6 +26,7 @@ export interface SubscriptionState {
     subscriptions: Subscription[];
     setSubscription: (subscription: Subscription | null) => void;
     fetchSubscriptions: () => Promise<void>;
+    fetchSubscription: () => Promise<void>;
     purchaseSubscription: (paymentData: PaymentData) => Promise<{ message: string; success: boolean }>;
     resetSubscription: () => void;
 }
@@ -60,7 +61,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
                         const response = await apiClient.get(endpoint, {
                             headers: {Authorization: `Bearer ${token}`},
                         });
-                        set({subscription: response.data});
+                        return response.data;
                     } catch (error) {
                         console.error("Error fetching subscriptions:", error);
                     }

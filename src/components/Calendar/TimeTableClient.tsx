@@ -4,14 +4,17 @@ import React, {useEffect, useState} from 'react';
 import {DayPilot, DayPilotCalendar, DayPilotMonth} from "@daypilot/daypilot-lite-react";
 import {useAdminSessionStore} from "../../stores/sessions/adminSessions";
 import EditSessionModal from "../CardBox/Component/EditSessionModal";
+import { useUserSessionStore } from '../../stores/sessions/UserSessions';
+import { useAuthStore } from '../../stores/auth/authStore';
 
 type ViewType = "Day" | "Week" | "Month";
 
-const TimeTable = () => {
+const TimeTableClient = () => {
     const fetchSessions = useAdminSessionStore(state => state.fetchSessions)
     const sessions = useAdminSessionStore(state => state.sessions)
-    const updateSession = useAdminSessionStore(state => state.updateSession)
-    const deleteSession = useAdminSessionStore(state => state.deleteSession)
+    const currentUser = useAuthStore(state => state.currentUser)
+    const postRegistration = useUserSessionStore(state => state.postRegistration)
+    
     const [view, setView] = useState<ViewType>("Week");
     const [startDate] = useState<DayPilot.Date>(DayPilot.Date.today());
     const [events, setEvents] = useState<DayPilot.EventData[]>([]);
@@ -156,33 +159,14 @@ const TimeTable = () => {
             "Available Slots: " + availableSlots;
     };
 
-    const editEvent = async (e: DayPilot.Event) => {
-        setEditingId(e.data.id);
-        setIsModalEdit(true);
-    };
-
-    const onEventMoved = async (id: number, data: { start_time: string, end_time: string }) => {
-        updateSession(id, data);
-    };
-
     const contextMenu = new DayPilot.Menu({
         items: [
             {
-                text: "Delete",
+                text: "Register",
                 onClick: async args => {
-                    deleteSession(args.source.data.id)
+                    postRegistration({ sessionId: args.source.data.id, user: currentUser.id, sessionDate: args.source.data.start });
                 },
             },
-            {
-                text: "-"
-            },
-            {
-                text: "Edit...",
-                onClick: async args => {
-                    setEditingId(args.source.data.id)
-                    setIsModalEdit(true);
-                }
-            }
         ]
     });
 
@@ -198,7 +182,7 @@ const TimeTable = () => {
                 id: session.id,  // Use the session ID
                 text: session.name,  // Use the session name as the event text
                 start: new DayPilot.Date(session.start_time),  // Convert date_time to DayPilot.Date
-                end: new DayPilot.Date(session.end_time).addHours(1),  // Assuming a 1-hour duration
+                end: new DayPilot.Date(session.end_time),  // Assuming a 1-hour duration
                 tags: {
                     color: "#cd5c5c",  // You can assign a color dynamically or use a default
                     assigned: `${session.trainer.first_name} ${session.trainer.last_name}`,  // Use the trainer's name
@@ -228,15 +212,10 @@ const TimeTable = () => {
                     viewType={"Day"}
                     startDate={startDate}
                     events={events}
-                    onEventMoved={async args => onEventMoved(args.e.data.id, {
-                        start_time: args.e.data.start.toString(),
-                        end_time: args.e.data.end.toString()
-                    })}
                     visible={view === "Day"}
-                    durationBarVisible={true}
+                    eventMoveHandling={'Disabled'}
+                    durationBarVisible={false}
                     contextMenu={contextMenu}
-                    onEventClick={async args => editEvent(args.e)}
-                    onTimeRangeSelected={onTimeRangeSelected}
                     onBeforeEventRender={onBeforeEventRenderDayWeek}
                     controlRef={setDayView}
                 />
@@ -244,31 +223,21 @@ const TimeTable = () => {
                     viewType={"Week"}
                     startDate={startDate}
                     events={events}
-                    onEventMoved={async args => onEventMoved(args.e.data.id, {
-                        start_time: args.e.data.start.toString(),
-                        end_time: args.e.data.end.toString()
-                    })}
                     visible={view === "Week"}
                     durationBarVisible={false}
-                    contextMenu={contextMenu}
-                    onEventClick={async args => editEvent(args.e)}
-                    onTimeRangeSelected={onTimeRangeSelected}
+                    eventMoveHandling={'Disabled'}
+                    contextMenu={contextMenu}                   
                     onBeforeEventRender={onBeforeEventRenderDayWeek}
                     controlRef={setWeekView}
                 />
                 <DayPilotMonth
                     startDate={startDate}
                     events={events}
-                    onEventMoved={async args => onEventMoved(args.e.data.id, {
-                        start_time: args.e.data.start.toString(),
-                        end_time: args.e.data.end.toString()
-                    })}
                     visible={view === "Month"}
                     eventHeight={50}
                     eventBarVisible={false}
+                    eventMoveHandling={'Disabled'}
                     contextMenu={contextMenu}
-                    onEventClick={async args => editEvent(args.e)}
-                    onTimeRangeSelected={onTimeRangeSelected}
                     onBeforeEventRender={onBeforeEventRenderMonth}
                     controlRef={setMonthView}
                 />
@@ -285,4 +254,4 @@ const TimeTable = () => {
     );
 };
 
-export default TimeTable;
+export default TimeTableClient;

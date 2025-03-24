@@ -14,7 +14,7 @@ export const menuAsideUser: MenuAsideItem[] = [
     label: 'Dashboard',
   },
   {
-    href: '/sessions',
+    href: '/session',
     label: 'Sessions',
     icon: mdiCalendar,
   },
