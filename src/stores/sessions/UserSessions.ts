@@ -3,79 +3,43 @@ import { apiClient } from "../api/apiCLient";
 import { getToken } from "../utils/token";
 
 interface SessionRegistration {
-  id: number;
+  sessionId: number;
   user: number;
   sessionDate: Date;
 }
 
 interface UserSessionState {
-  registrations: SessionRegistration[];
-  fetchRegistrations: () => Promise<void>;
-  registerForSession: (data: { userId: number; sessionDate: Date }) => Promise<void>;
-  cancelRegistration: (registrationId: number) => Promise<void>;
-  sessions: { id: number; title: string; date: string }[];
-  fetchSessions: () => Promise<void>;
+  postRegistration: (registration: SessionRegistration) => void;
+  getRegistrations: () => Promise<void>;
 }
 
 export const useUserSessionStore = create<UserSessionState>((set, get) => ({
-  registrations: [],
-  sessions: [],
-
-  fetchSessions: async () => {
-    const token = getToken();
-    if (!token) return console.warn("No token found, cannot fetch sessions.");
+  postRegistration: async (registration) => {
     try {
-      const response = await apiClient.get("/sessions", {
-        headers: { Authorization: `Bearer ${token}` },
+      const token = getToken();
+      await apiClient.post("/session-registrations", {
+        userId:registration.user,
+        sessionId: registration.sessionId,
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
-      set({ sessions: response.data });
     } catch (error) {
-      console.error("Error fetching sessions:", error);
+      console.error(error);
     }
   },
-
-  fetchRegistrations: async () => {
-    const token = getToken();
-    if (!token) return console.warn("No token found, cannot fetch registrations.");
+  getRegistrations: async () => {
     try {
-      const response = await apiClient.get("/session-registrations", {
-        headers: { Authorization: `Bearer ${token}` },
+      const token = getToken();
+      const response = await apiClient.get("/session-registrations/upcomingSessions", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
-      set({ registrations: response.data });
+      return response.data;
     } catch (error) {
-      console.error("Error fetching registrations:", error);
-    }
-  },
-
-  registerForSession: async ({ userId, sessionDate }: { userId: number; sessionDate: Date }) => {
-    const token = getToken();
-    if (!token) return console.warn("No token found, cannot register.");
-    try {
-      const response = await apiClient.post(
-        "/session-registrations",
-        { user: userId, sessionDate },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      set((state) => ({
-        registrations: [...state.registrations, response.data],
-      }));
-    } catch (error) {
-      console.error("Error registering for session:", error);
-    }
-  },
-
-  cancelRegistration: async (registrationId) => {
-    const token = getToken();
-    if (!token) return console.warn("No token found, cannot cancel registration.");
-    try {
-      await apiClient.delete(`/session-registrations/${registrationId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      set((state) => ({
-        registrations: state.registrations.filter((r) => r.id !== registrationId),
-      }));
-    } catch (error) {
-      console.error("Error canceling registration:", error);
+      console.error(error);
     }
   },
 }));

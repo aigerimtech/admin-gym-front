@@ -9,7 +9,7 @@ import NumberDynamic from '../NumberDynamic'
 import PillTagTrend from '../PillTag/Trend'
 
 type Props = {
-  number: number
+  number: number | string
   numberPrefix?: string
   numberSuffix?: string
   icon: string
@@ -31,18 +31,18 @@ const CardBoxWidget = (props: Props) => {
             color={props.trendColor}
             small
           />
-          <Button icon={mdiCog} color="lightDark" small />
+          {/* <Button icon={mdiCog} color="lightDark" small /> */}
         </div>
       )}
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg leading-tight text-gray-500 dark:text-slate-400">{props.label}</h3>
           <h1 className="text-3xl leading-tight font-semibold">
-            <NumberDynamic
+            {typeof props.number === 'number' ? <NumberDynamic
               value={props.number}
               prefix={props.numberPrefix}
               suffix={props.numberSuffix}
-            />
+            /> : props.number}
           </h1>
         </div>
         {props.icon && (

@@ -26,6 +26,7 @@ type AppPropsWithLayout = AppProps & {
 function MyApp({Component, pageProps}: AppPropsWithLayout) {
     const router = useRouter();
     const token = useAuthStore((state) => state.token);
+    const currentUser = useAuthStore((state) => state.currentUser);
     const fetchCurrentUser = useAuthStore((state) => state.fetchCurrentUser)
     const [hydrated, setHydrated] = useState(false);
     const [attendanceModalActive, setAttendanceModalActive] = useState(false);
@@ -56,7 +57,8 @@ function MyApp({Component, pageProps}: AppPropsWithLayout) {
                 {token && !isAuthPage ? (
                     <LayoutAuthenticated>
                         <Component {...pageProps} />
-                        <div className="fixed bottom-4 right-4">
+                        {currentUser.access_level !== "client" && (
+                            <div className="fixed bottom-4 right-4">
                             <button
                                 onClick={() => {
                                     setAttendanceModalActive(true);
@@ -66,7 +68,7 @@ function MyApp({Component, pageProps}: AppPropsWithLayout) {
                                 <Icon path={mdiPlus} size={0.8}/> Mark Attendance
                             </button>
                         </div>
-
+                        )}
                         <MarkAttendanceModal
                             isActive={attendanceModalActive}
                             onClose={() => setAttendanceModalActive(false)}

@@ -25,6 +25,7 @@ interface AttendanceStore {
   markAttendance: (userId: number, visitDate: string | Date) => Promise<void>;
   updateAttendance: (attendanceId: number, visitDate: string | Date) => Promise<void>;
   deleteAttendance: (attendanceId: number) => Promise<void>;
+  fetchLastMonthAttendance: () => Promise<void>;
 }
 
 export const useAttendanceStore = create<AttendanceStore>((set, get) => ({
@@ -45,6 +46,21 @@ export const useAttendanceStore = create<AttendanceStore>((set, get) => ({
     }
   },
 
+  fetchLastMonthAttendance: async () => {
+    try {
+      const token = getToken();
+      if (token) setAuthHeader(token);
+
+      const response =  await apiClient.get("/attendance/monthly-visits", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error("Error fetching attendance:", error.response?.data || error.message);
+    }
+  },
   markAttendance: async (userId, visitDate) => {
     try {
       const token = getToken();

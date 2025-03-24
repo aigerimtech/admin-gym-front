@@ -25,6 +25,7 @@ interface AdminState {
   updateUser: (id: number, userData: Partial<User>) => Promise<void>;
   updateUserSubscription: (userId: number, subscription: Subscription | null) => void;
   fetchUsersByName: (username: string) => Promise<User[]>;
+  fetchCountAllUsers: () => Promise<void>;
   logout: () => void; 
 }
 
@@ -75,6 +76,21 @@ export const useAdminStore = create<AdminState>((set) => ({
       set({ users, currentAdmin });
     } catch (error) {
       console.error("Error fetching users or subscriptions:", error);
+    }
+  },
+
+  fetchCountAllUsers: async () => {
+    try {
+    const token = getToken();
+    if (!token) return;
+    const response = await apiClient.get("/users/count", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      }
+    })
+    return response.data;
+    } catch (error) {
+      console.error("Error fetching users count:", error);
     }
   },
   
