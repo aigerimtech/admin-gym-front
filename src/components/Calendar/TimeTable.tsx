@@ -204,27 +204,8 @@ const TimeTable = () => {
     };
 
     const editEvent = async (e: DayPilot.Event) => {
-        const form = [
-            {name: "Event text", id: "text", type: "text"},
-            {name: "Event color", id: "tags.color", type: "select", options: colors},
-            {name: "Trainer", id: "tags.assigned", type: "select", options: people},
-            {name: "Location", id: "tags.location", type: "select", options: locations},
-            {name: "Team", id: "tags.team", type: "select", options: teams},
-            {name: "Capacity", id: "tags.capacity", type: "number"},
-            {name: "Available Slots", id: "tags.available_slots", type: "number"}
-        ];
-        const modal = await DayPilot.Modal.form(form, e.data);
-        if (modal.canceled) {
-            return;
-        }
-        const updatedEvent = modal.result;
-        setEvents((prevEvents) =>
-            prevEvents.map((item) =>
-                item.id === e.id()
-                    ? updatedEvent
-                    : item
-            )
-        );
+        setEditingId(e.data.id);
+        setIsModalEdit(true);
     };
 
     const onEventMoved = async (id: number, data: { start_time: string, end_time: string }) => {

@@ -36,9 +36,6 @@ interface PaymentData {
     expiryDate: string;
     cvv: string;
     type: "monthly" | "quarterly" | "yearly";
-    startDate: string;
-    endDate: string;
-    visitsLeft: number;
 }
 
 export const useSubscriptionStore = create<SubscriptionState>()(

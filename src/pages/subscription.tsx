@@ -10,142 +10,42 @@ import { useSubscriptionStore } from "../stores/subscription/subscriptionStore";
 import { useAuthStore } from "../stores/auth/authStore";
 import { useAdminStore } from "../stores/admin/adminStore";
 import Head from "next/head";
+import SectionTitle from "../components/Section/Title";
+
+const SubscriptionTypes = ["monthly", "quarterly", "yearly"];
 
 const SubscriptionPage = () => {
-  const { subscription, fetchSubscriptions, purchaseSubscription, setSubscription, resetSubscription } = useSubscriptionStore();
-  const { currentUser } = useAuthStore();
-  const { currentAdmin } = useAdminStore(); 
+  const { purchaseSubscription } = useSubscriptionStore();
 
-  const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    cardNumber: "",
-    cardHolder: "",
-    expiryDate: "",
-    cvv: "",
-    subscriptionType: "monthly" as "monthly" | "quarterly" | "yearly",
-  });
+  const [selectedSubscription, setSelectedSubscription] = useState<"monthly" | "quarterly" | "yearly">("monthly");
+  const [cardNumber, setCardNumber] = useState<string | null>(null);
+  const [expiry, setExpiry] = useState<string | null>(null);
+  const [cvv, setCvv] = useState<string | null>(null);
+  const [name, setName] = useState<string | null>(null);
 
-  const [isPaymentFormVisible, setPaymentFormVisible] = useState(false);
-  const [errors, setErrors] = useState({
-    cardNumber: "",
-    cardHolder: "",
-    cvv: "",
-    expiryDate: "",
-  });
-
-  useEffect(() => {
-    if (currentUser) {
-      if (currentAdmin) {
-        resetSubscription();
-      } else {
-        fetchSubscriptions();
+  const handlePurchaseSubscription = async () => {
+    if (!selectedSubscription) {
+      alert("Please select a subscription type.");
+      return;
+    } else if (!cardNumber || !expiry || !cvv || !name) {
+      alert("Please fill in all fields.");
+      return;
+    } else {
+      const paymentData = {    
+        cardNumber,
+        cardHolder: name,
+        expiryDate: expiry,
+        cvv,
+        type: selectedSubscription,  
+      };
+      const response = await purchaseSubscription(paymentData);
+      if (response.success) {
+        alert('successfully purchased subscription');
       }
     }
-  }, [currentUser, currentAdmin, fetchSubscriptions, resetSubscription]);
+  ;}
 
-  useEffect(() => {
-    if (!subscription && currentUser) {
-      setPaymentFormVisible(true);
-    } else if (subscription && subscription.status === 'active') {
-      setPaymentFormVisible(false); 
-    }
-  }, [subscription, currentUser]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "").slice(0, 16);
-    setFormData({ ...formData, cardNumber: value });
-    if (value.length > 0 && value.length !== 16) {
-      setErrors({ ...errors, cardNumber: "Card number must be 16 digits." });
-    } else {
-      setErrors({ ...errors, cardNumber: "" });
-    }
-  };
-
-  const handleCvvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "").slice(0, 3);
-    setFormData({ ...formData, cvv: value });
-    if (value.length > 0 && value.length !== 3) {
-      setErrors({ ...errors, cvv: "CVV must be 3 digits." });
-    } else {
-      setErrors({ ...errors, cvv: "" });
-    }
-  };
-
-  const handleCardHolderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\d/g, "");
-    setFormData({ ...formData, cardHolder: value });
-    if (/\d/.test(value)) {
-      setErrors({ ...errors, cardHolder: "Cardholder name cannot contain numbers." });
-    } else {
-      setErrors({ ...errors, cardHolder: "" });
-    }
-  };
-
-  const handleExpiryDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, "").slice(0, 4);
-    if (value.length >= 2) {
-      value = `${value.slice(0, 2)}/${value.slice(2)}`;
-    }
-    setFormData({ ...formData, expiryDate: value });
-    if (value.length === 4 && !/^\d{2}\/\d{2}$/.test(value)) {
-      setErrors({ ...errors, expiryDate: "Please enter a valid expiry date in MM/YY format." });
-    } else {
-      setErrors({ ...errors, expiryDate: "" });
-    }
-  };
-
-  const handleSubscription = async () => {
-    if (!currentUser) {
-      setPaymentStatus("Please log in to purchase or update a subscription.");
-      return;
-    }
-
-    const { cardNumber, cardHolder, expiryDate, cvv, subscriptionType } = formData;
-
-    if (!cardNumber || !cardHolder || !expiryDate || !cvv) {
-      setPaymentStatus("Please fill in all payment details.");
-      return;
-    }
-
-    const startDate = new Date();
-    const endDate = new Date();
-    if (subscriptionType === "monthly") endDate.setMonth(startDate.getMonth() + 1);
-    else if (subscriptionType === "quarterly") endDate.setMonth(startDate.getMonth() + 3);
-    else endDate.setFullYear(startDate.getFullYear() + 1);
-
-    const visitsLeft = subscriptionType === "monthly" ? 10 : subscriptionType === "quarterly" ? 30 : 100;
-
-    const result = await purchaseSubscription({
-      cardNumber,
-      cardHolder,
-      expiryDate,
-      cvv,
-      type: subscriptionType,
-      startDate: startDate.toISOString().split("T")[0],
-      endDate: endDate.toISOString().split("T")[0],
-      visitsLeft,
-    });
-
-    if (result.success) {
-      const updatedSubscription = {
-        ...subscription,
-        type: subscriptionType,
-        start_date: startDate.toISOString().split("T")[0],
-        end_date: endDate.toISOString().split("T")[0],
-        visits_left: visitsLeft,
-      };
-
-      setSubscription(updatedSubscription);
-    }
-
-    setPaymentStatus(result.message);
-    setPaymentFormVisible(false);
-  };
-
+  
   return (
     <>
       <Head>
@@ -153,109 +53,75 @@ const SubscriptionPage = () => {
       </Head>
 
       <SectionMain>
-        <SectionTitleLineWithButton icon={mdiViewList} title="Subscriptions" main>
-          {subscription && !currentAdmin && (
-            <Button
-              onClick={() => setPaymentFormVisible(true)}
-              icon={mdiCashMultiple}
-              label="Update Subscription"
-              color="success"
-              roundedFull
-              small
-              className="hover:bg-green-700 transition-all duration-300 ease-in-out"
-            />
-          )}
-        </SectionTitleLineWithButton>
+        <SectionTitle icon={mdiViewList}>
+          Subscriptions
+        </SectionTitle>
 
         <NotificationBar color="info" icon={mdiViewList}>
           <b>Manage your subscriptions.</b> View and update plans.
         </NotificationBar>
 
         <CardBox className="p-6 mb-6">
-          <h2 className="text-2xl font-semibold mb-4 text-center">Subscription Details</h2>
+          <h2 className="text-2xl font-semibold mb-10 text-center">Subscription Details</h2>
 
-          {subscription ? (
-            <>
-              <div className="border p-6 rounded-lg bg-gray-100 shadow-md mb-4 hover:shadow-lg transition-all duration-300 ease-in-out">
-                <h3 className="text-lg font-semibold">Your Current Subscription</h3>
-                <p><strong>Type:</strong> {subscription.type}</p>
-                <p><strong>Start Date:</strong> {subscription.start_date}</p>
-                <p><strong>End Date:</strong> {subscription.end_date}</p>
-                <p><strong>Visits Left:</strong> {subscription.visits_left}</p>
-              </div>
-              <p>Want to change your subscription type or number of visits? Press <span className="font-semibold text-blue-600">&quot;Update Subscription&quot;</span>.</p>
-            </>
-          ) : (
-            <p className="text-center mb-4">No active subscription found. Please enter payment details below.</p>
-          )}
-
-          {isPaymentFormVisible && currentUser && !currentAdmin && (
-            <div className="mt-6 border p-6 rounded-lg bg-gray-50 shadow-md">
-              <h3 className="text-lg font-semibold mb-4">Enter Payment Details</h3>
-
-              <label className="block mb-2">Subscription Type</label>
-              <select
-                className="w-full p-2 border rounded mb-4"
-                name="subscriptionType"
-                value={formData.subscriptionType}
-                onChange={handleChange}
-              >
-                <option value="monthly">Monthly</option>
-                <option value="quarterly">Quarterly</option>
-                <option value="yearly">Yearly</option>
+            <div className="flex flex-col items-center w-full gap-5">
+              <div className="flex items-center w-full mb-20">
+                <select
+                  name="subscriptionType"
+                  value={selectedSubscription}
+                  onChange={(e) => setSelectedSubscription(e.target.value as any)}
+                  className="form-select w-1/3 mr-2"
+                >
+                  {SubscriptionTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
               </select>
+                <div className="w-96 h-56 m-auto bg-red-100 rounded-xl relative text-white shadow-2xl transition-transform transform ml-auto">
+              
+                <img className="relative object-cover w-full h-full rounded-xl" src="https://i.imgur.com/kGkSg1v.png" />
+              
+                <div className="w-full px-8 absolute top-8">
+                    <div className="flex justify-between">
+                        <div className="">
+                            <p className="font-light">
+                                Name
+                            </p>
+                            <input onChange={(e) => setName(e.target.value)} placeholder="Karthik P" className="font-medium tracking-widest bg-transparent border-none p-0 m-0 outline-none placeholder:text-[#dad9d9]" />
+                        </div>
+                        <img className="w-14 h-14" src="https://i.imgur.com/bbPHJVe.png"/>
+                    </div>
+                    <div className="pt-1">
+                        <p className="font-light">
+                            Card Number
+                        </p>
+                        <input onChange={(e) => setCardNumber(e.target.value)} placeholder="4642348998677632" className="font-medium tracking-wider bg-transparent border-none p-0 m-0 outline-none placeholder:text-[#dad9d9]" />
+                    </div>
+                    <div className="pt-6 pr-6">
+                        <div className="flex justify-between">
+                            <div className="">
+                                <p className="font-light text-xs">
+                                Expiry
+                                </p>
+                                <input onChange={(e) => setExpiry(e.target.value)} placeholder="11/15" className="font-medium text-sm tracking-wider bg-transparent border-none p-0 m-0 outline-none placeholder:text-[#dad9d9]" />
+                            </div>
 
-              <input
-                className={`w-full p-2 border rounded mb-2 ${errors.cardNumber ? 'border-red-500' : ''}`}
-                type="text"
-                name="cardNumber"
-                placeholder="Card Number"
-                value={formData.cardNumber}
-                onChange={handleCardNumberChange}
-              />
-              {errors.cardNumber && <p className="text-red-500 text-sm">{errors.cardNumber}</p>}
+                            <div className="">
+                                <p className="font-light text-xs">
+                                    CVV
+                                </p>
+                                <input onChange={(e) => setCvv(e.target.value)} type="password" placeholder="..." className="font-light text-xs  bg-transparent border-none p-0 m-0 outline-none placeholder:text-[#dad9d9]" />
+                            </div>
+                        </div>
+                    </div>
 
-              <input
-                className={`w-full p-2 border rounded mb-2 ${errors.cardHolder ? 'border-red-500' : ''}`}
-                type="text"
-                name="cardHolder"
-                placeholder="Card Holder"
-                value={formData.cardHolder}
-                onChange={handleCardHolderChange}
-              />
-              {errors.cardHolder && <p className="text-red-500 text-sm">{errors.cardHolder}</p>}
-
-              <input
-                className={`w-full p-2 border rounded mb-2 ${errors.expiryDate ? 'border-red-500' : ''}`}
-                type="text"
-                name="expiryDate"
-                placeholder="Expiry Date (MM/YY)"
-                value={formData.expiryDate}
-                onChange={handleExpiryDateChange}
-              />
-              {errors.expiryDate && <p className="text-red-500 text-sm">{errors.expiryDate}</p>}
-
-              <input
-                className={`w-full p-2 border rounded mb-2 ${errors.cvv ? 'border-red-500' : ''}`}
-                type="text"
-                name="cvv"
-                placeholder="CVV"
-                value={formData.cvv}
-                onChange={handleCvvChange}
-              />
-              {errors.cvv && <p className="text-red-500 text-sm">{errors.cvv}</p>}
-
-              <Button
-                onClick={handleSubscription}
-                label="Submit Payment"
-                color="success"
-                roundedFull
-                small
-                className="mt-4 w-full"
-              />
-              <p className="text-center text-green-600 mt-4">{paymentStatus}</p>
+                </div>
+                </div>
+              </div>
+              <button className="bg-blue-500 text-white px-4 py-2 rounded flex items-center gap-1" onClick={() => {handlePurchaseSubscription()}}>Pay for Subscription</button>
             </div>
-          )}
+            
         </CardBox>
       </SectionMain>
     </>

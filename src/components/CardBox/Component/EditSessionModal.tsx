@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import CardBoxModal from "../../CardBox/Modal";
 import Flatpickr from "react-flatpickr";
 import {useAdminSessionStore} from "../../../stores/sessions/adminSessions";
+import InputWithUserName from "../../inputs/InputWithUserName";
+import { User } from "../../../stores/admin/adminStore";
 
 interface CreateUserModalProps {
-    sessionId: number
+    sessionId: number;
     isActive: boolean;
     onClose: () => void;
 }
@@ -14,18 +16,18 @@ const EditSessionModal: React.FC<CreateUserModalProps> = ({ isActive, onClose, s
     const session = useAdminSessionStore(state => state.sessions).find(session => session.id === sessionId)
     const [formData, setFormData] = useState<any>(session || {
         name: "",
-        trainer: "",
         start_time: "",
         end_time: "",
         capacity: "",
         available_slots: "",
     });
+    const [trainer, setTrainer] = useState<User[]>([]);
 
     const handleSave = async () => {
         try {
             await createSession({
                 name: formData.name,
-                trainer: parseInt(formData.trainer, 10),  // Convert to number
+                trainer: trainer[0]?.id || 0,  // Convert to number
                 start_time: new Date(formData.start_time).toISOString(),  // Convert to timestamp
                 end_time: new Date(formData.end_time).toISOString(),  // Convert to ISO string
                 capacity: parseInt(formData.capacity, 10),  // Convert to number
@@ -69,6 +71,7 @@ const EditSessionModal: React.FC<CreateUserModalProps> = ({ isActive, onClose, s
                     onChange={handleInputChange}
                     placeholder="Enter trainer ID"
                 />
+                <InputWithUserName selectedPersons={(users:User[]) => {setTrainer(users)} } />
                 <Flatpickr
                     className="border p-2 w-full mb-2"
                     options={{ enableTime: true, dateFormat: "Y-m-d H:i" }}

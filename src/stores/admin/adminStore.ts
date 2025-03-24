@@ -24,6 +24,7 @@ interface AdminState {
   deleteUser: (id: number) => Promise<void>;
   updateUser: (id: number, userData: Partial<User>) => Promise<void>;
   updateUserSubscription: (userId: number, subscription: Subscription | null) => void;
+  fetchUsersByName: (username: string) => Promise<User[]>;
   logout: () => void; 
 }
 
@@ -175,6 +176,24 @@ export const useAdminStore = create<AdminState>((set) => ({
       }));
 
       await useSubscriptionStore.getState().fetchSubscriptions();
+    } catch (error) {
+      console.error("Error updating user:", error);
+    }
+  },
+
+  fetchUsersByName: async (username: string) => {
+    const token = getToken();
+    if (!token) {
+      console.warn("No token found, cannot update user.");
+      return;
+    }
+
+    try {
+      const response = await apiClient.get(`/users/search/${username}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      return response.data;
     } catch (error) {
       console.error("Error updating user:", error);
     }

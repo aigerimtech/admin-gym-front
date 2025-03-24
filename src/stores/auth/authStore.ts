@@ -28,6 +28,7 @@ export interface AuthState {
   logoutUser: () => void;
   fetchUsers: () => Promise<void>;
   fetchCurrentUser: () => Promise<void>;
+  setToken: (token: null) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -128,7 +129,11 @@ export const useAuthStore = create<AuthState>()(
         fetchUsers: async () => {
           if (!get().isAdmin) return console.warn("Unauthorized: Only admins can fetch users");
           await useAdminStore.getState().fetchUsers();
-        }
+        },
+        setToken: (token: null) => {
+          set({ token: token });
+          set({currentUser: null});
+        },
       }),
       { name: "auth-storage" }
     )
